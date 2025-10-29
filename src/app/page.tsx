@@ -12,16 +12,16 @@ export default function Home() {
         <div className="grid items-center gap-10 lg:grid-cols-12">
           <div className="lg:col-span-7">
             <span className="inline-flex items-center rounded-full border px-3 py-1 text-xs text-muted-foreground">
-              Playlist recommendations from your own taste
+              Book recommendations from your Spotify taste
             </span>
             <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
               Turn your Spotify playlists
               <br className="hidden sm:block" />
-              into smarter <span className="text-primary">recommendations</span>
+              into smarter <span className="text-primary">book picks</span>
             </h1>
             <p className="mt-4 max-w-2xl text-base text-muted-foreground">
-              Pick one or more of your playlists as seeds, tweak energy/tempo/valence filters,
-              preview tracks, and save a brand-new mix to your library.
+              Choose one or more of your playlists as signals, map mood and energy to genres and
+              themes, and get a curated reading list that matches your vibe.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -36,7 +36,7 @@ export default function Home() {
                 onClick={() =>
                   toast('Demo mode', {
                     description:
-                      'This is a preview. After auth is connected, you can generate real recommendations.',
+                      'This is a preview. After connecting Spotify, we’ll generate real book recommendations.',
                   })
                 }
               >
@@ -46,8 +46,8 @@ export default function Home() {
 
             <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
               <li>• Secure connection with Spotify</li>
-              <li>• Your data stays private</li>
-              <li>• Save playlists directly to your account</li>
+              <li>• Your listening data stays private</li>
+              <li>• Save reading lists to your account</li>
             </ul>
           </div>
 
@@ -55,10 +55,12 @@ export default function Home() {
             <div className="rounded-2xl border bg-card p-4 shadow-sm">
               {/* simple mock preview */}
               <div className="grid grid-cols-3 gap-3">
-                {['Chill Vibes', 'Focus Beats', 'Daily Mix 1'].map((name, i) => (
+                {['Moody Fiction', 'Focus Non-fiction', 'Weekend Escapes'].map((name, i) => (
                   <div
                     key={i}
-                    className="aspect-square rounded-xl bg-muted/70 ring-1 ring-border/50"
+                    className="aspect-[3/4] rounded-xl bg-muted/70 ring-1 ring-border/50"
+                    aria-label={name}
+                    title={name}
                   />
                 ))}
               </div>
@@ -67,9 +69,9 @@ export default function Home() {
                 <div className="h-2 w-1/2 rounded bg-muted" />
               </div>
               <div className="mt-4 flex gap-2">
-                <Button className="flex-1">Generate</Button>
+                <Button className="flex-1">Generate books</Button>
                 <Button variant="outline" className="flex-1">
-                  Save playlist
+                  Save reading list
                 </Button>
               </div>
             </div>
@@ -82,15 +84,15 @@ export default function Home() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Feature
             title="Seed with your playlists"
-            desc="Pick 1–3 of your own playlists to anchor recommendations."
+            desc="Pick 1–3 of your playlists to reflect mood, energy, and taste."
           />
           <Feature
-            title="Audio features filters"
-            desc="Tune energy, danceability, valence, tempo, popularity and year."
+            title="Smart mapping"
+            desc="We translate audio features into book genres, pacing, themes, and tone."
           />
           <Feature
             title="One-click save"
-            desc="Review, tweak, and save as a new Spotify playlist."
+            desc="Review, tweak, and save as a personal reading list."
           />
         </div>
       </section>
@@ -101,8 +103,8 @@ export default function Home() {
         <ol className="grid gap-4 sm:grid-cols-3">
           {[
             ['Connect', 'Sign in with Spotify (secure PKCE).'],
-            ['Select seeds', 'Choose playlists to represent your taste.'],
-            ['Generate & save', 'Preview tracks, adjust filters, save to library.'],
+            ['Select seeds', 'Choose playlists that best represent your vibe.'],
+            ['Generate & save', 'Get book picks, adjust genres/themes, save your list.'],
           ].map(([title, desc], i) => (
             <Card key={i} className="h-full">
               <CardContent className="p-5">
@@ -120,9 +122,9 @@ export default function Home() {
       {/* CTA */}
       <section className="border-t bg-background/40">
         <div className="mx-auto max-w-6xl px-6 py-12 text-center">
-          <h3 className="text-2xl font-semibold">Ready to build your next mix?</h3>
+          <h3 className="text-2xl font-semibold">Ready to find your next read?</h3>
           <p className="mt-2 text-muted-foreground">
-            Start with your own playlists and let the recommendations flow.
+            Start from your playlists and let the book recommendations flow.
           </p>
           <div className="mt-6">
             <Link href="/dashboard">
