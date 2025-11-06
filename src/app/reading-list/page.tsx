@@ -46,10 +46,18 @@ export default function ReadingListPage() {
               Back to dashboard
             </Button>
           </Link>
+
           {items.length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => clear()}>
-              Clear all
-            </Button>
+            <ConfirmDialog
+              title="Clear all saved books?"
+              message="This action will remove every book from your reading list. You won’t be able to undo this."
+              onConfirm={() => clear()}
+              trigger={
+                <Button variant="outline" size="sm">
+                  Clear all
+                </Button>
+              }
+            />
           )}
         </div>
       </div>
