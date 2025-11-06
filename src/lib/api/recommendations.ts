@@ -1,3 +1,4 @@
+// src/lib/api/recommendations.ts
 export type BookRecommendation = {
   id: string
   title: string
@@ -5,6 +6,7 @@ export type BookRecommendation = {
   cover?: string
   matchScore: number // 0-100
   reason: string
+  url: string
 }
 
 const BOOK_BY_PLAYLIST: Record<string, BookRecommendation> = {
@@ -13,45 +15,60 @@ const BOOK_BY_PLAYLIST: Record<string, BookRecommendation> = {
     title: 'The Night Circus',
     author: 'Erin Morgenstern',
     cover:
-      'https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=700&auto=format&fit=crop',
+      'https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1387124618i/9361589.jpg',
     matchScore: 92,
     reason: 'Dreamy, mysterious vibe — fits the moody romance of “Daily Mix.”',
+    url: 'https://www.goodreads.com/book/show/9361589-the-night-circus',
   },
   '2': {
     id: 'bk-pachinko',
     title: 'Pachinko',
     author: 'Min Jin Lee',
     cover:
-      'https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=700&auto=format&fit=crop',
+      'https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1529845599i/34051011.jpg',
     matchScore: 88,
     reason: 'Emotional and reflective — aligned with the soft, nostalgic “Chill Vibes.”',
+    url: 'https://www.goodreads.com/book/show/34051011-pachinko',
   },
   '3': {
     id: 'bk-project-hail-mary',
     title: 'Project Hail Mary',
     author: 'Andy Weir',
     cover:
-      'https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=700&auto=format&fit=crop',
+      'https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1597695864i/54493401.jpg',
     matchScore: 90,
     reason: 'High-energy, inventive sci-fi — perfect for the upbeat “Focus Beats.”',
+    url: 'https://www.goodreads.com/book/show/54493401-project-hail-mary',
   },
   '4': {
     id: 'bk-shadow-of-the-wind',
     title: 'The Shadow of the Wind',
     author: 'Carlos Ruiz Zafón',
     cover:
-      'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=700&auto=format&fit=crop',
+      'https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1628791882i/1232.jpg',
     matchScore: 87,
     reason: 'Moody, literary mystery — resonates with the indie, atmospheric “Indie Waves.”',
+    url: 'https://www.goodreads.com/book/show/1232.The_Shadow_of_the_Wind',
   },
   '5': {
     id: 'bk-klara-and-the-sun',
     title: 'Klara and the Sun',
     author: 'Kazuo Ishiguro',
     cover:
-      'https://images.unsplash.com/photo-1505483531331-fc3cf89fd382?q=80&w=700&auto=format&fit=crop',
+      'https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1603206535i/54120408.jpg',
     matchScore: 85,
     reason: 'Quiet, contemplative sci-fi — pairs with the calm focus of “Lo-Fi Study.”',
+    url: 'https://www.goodreads.com/book/show/54120408-klara-and-the-sun',
+  },
+  '6': {
+    id: 'bk-great-gatsby',
+    title: 'The Great Gatsby',
+    author: 'F. Scott Fitzgerald',
+    cover:
+      'https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1738790966i/4671.jpg',
+    matchScore: 89,
+    reason: 'Jazz-age elegance and melancholy — the literary twin of “Midnight Jazz.”',
+    url: 'https://www.goodreads.com/book/show/4671.The_Great_Gatsby',
   },
 }
 
