@@ -38,5 +38,12 @@ export async function fetchUserPlaylists(): Promise<Playlist[]> {
       image:
         'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=800&auto=format&fit=crop',
     },
+    {
+      id: '6',
+      name: 'Midnight Jazz',
+      tracksTotal: 39,
+      image:
+        'https://images.unsplash.com/photo-1525093485273-34834413e1ba?q=80&w=800&auto=format&fit=crop',
+    },
   ]
 }
