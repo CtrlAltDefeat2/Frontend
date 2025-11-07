@@ -142,9 +142,8 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="text-sm font-medium leading-tight line-clamp-2">{p.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {p.tracksTotal ?? 0} tracks
-                      </div>
+                      <div className="text-xs text-muted-foreground">{p.tracksTotal} tracks</div>
+
                       <p className="mt-1 text-[11px] text-muted-foreground">
                         {active ? 'Selected ✓' : 'Used to inspire book matches.'}
                       </p>
