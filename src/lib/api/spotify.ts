@@ -1,49 +1,42 @@
-export type Playlist = { id: string; name: string; image?: string; tracksTotal?: number }
+export type Playlist = {
+  id: string
+  name: string
+  image: string
+  tracksTotal: number
+  tracksLink: string
+}
+async function fetchPlaylists(token: string): Promise<Playlist[]> {
+  const response = await fetch('https://api.spotify.com/v1/me/playlists', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Fetch error: ${response.status} ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return data.items.map(
+    (item: {
+      id: string
+      name: string
+      images: { url: string }[]
+      tracks: { total: number; href: string }
+    }) => ({
+      id: item.id,
+      name: item.name,
+      image: item.images?.[0]?.url,
+      tracksTotal: item.tracks.total,
+      tracksLink: item.tracks.href, // pt legarea cu backend, aici se face fetch pt. melodiile fiecarui playlist
+      // apoi se foloseste items -> track -> trackObject -> id ca sa se faca fetch
+      // in reccobeats
+    }),
+  )
+}
 
 export async function fetchUserPlaylists(): Promise<Playlist[]> {
-  await new Promise((r) => setTimeout(r, 250))
-  return [
-    {
-      id: '1',
-      name: 'Daily Mix',
-      tracksTotal: 50,
-      image:
-        'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop',
-    },
-    {
-      id: '2',
-      name: 'Chill Vibes',
-      tracksTotal: 73,
-      image:
-        'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=800&auto=format&fit=crop',
-    },
-    {
-      id: '3',
-      name: 'Focus Beats',
-      tracksTotal: 42,
-      image:
-        'https://images.unsplash.com/photo-1483412033650-1015ddeb83d1?q=80&w=800&auto=format&fit=crop',
-    },
-    {
-      id: '4',
-      name: 'Indie Waves',
-      tracksTotal: 64,
-      image:
-        'https://images.unsplash.com/photo-1514894780887-121968d00567?q=80&w=800&auto=format&fit=crop',
-    },
-    {
-      id: '5',
-      name: 'Lo-Fi Study',
-      tracksTotal: 58,
-      image:
-        'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=800&auto=format&fit=crop',
-    },
-    {
-      id: '6',
-      name: 'Midnight Jazz',
-      tracksTotal: 39,
-      image:
-        'https://images.unsplash.com/photo-1525093485273-34834413e1ba?q=80&w=800&auto=format&fit=crop',
-    },
-  ]
+  const token = 'test' // aici se face fetch la token din local storage sau whatever dupa login
+  // fara o valoare aici, pagina nu se va afisa - inlocuiti cu token-ul vostru spotify
+  return await fetchPlaylists(token)
 }
