@@ -1,15 +1,28 @@
 import { create } from 'zustand'
 
-type UIState = { theme: 'light' | 'dark'; toggleTheme: () => void }
+interface UIStore {
+  theme: 'light' | 'dark'
+  toggleTheme: () => void
 
-export const useUIStore = create<UIState>((set) => ({
+  accessToken: string | null
+  refreshToken: string | null
+  setTokens: (accessToken: string, refreshToken: string) => void
+  clearTokens: () => void
+}
+
+export const useUIStore = create<UIStore>((set) => ({
   theme: 'dark',
   toggleTheme: () =>
-    set((s) => {
-      const next = s.theme === 'dark' ? 'light' : 'dark'
+    set((state) => {
+      const next = state.theme === 'dark' ? 'light' : 'dark'
       if (typeof document !== 'undefined') {
         document.documentElement.classList.toggle('dark', next === 'dark')
       }
       return { theme: next }
     }),
+
+  accessToken: null,
+  refreshToken: null,
+  setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
+  clearTokens: () => set({ accessToken: null, refreshToken: null }),
 }))
