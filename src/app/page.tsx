@@ -3,8 +3,19 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { toast } from 'sonner'
+import { initiateSpotifyLogin } from '@/lib/api/spotify-login'
 
 export default function Home() {
+  const handleSpotifyLogin = () => {
+    try {
+      initiateSpotifyLogin()
+    } catch (error) {
+      toast.error('Failed to connect', {
+        description: 'Could not initiate Spotify login. Please try again.',
+      })
+    }
+  }
+
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-background via-background to-background/60">
       {/* HERO */}
@@ -25,11 +36,10 @@ export default function Home() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/dashboard">
-                <Button size="lg" className="px-6">
-                  Connect with Spotify
-                </Button>
-              </Link>
+              <Button size="lg" className="px-6" onClick={handleSpotifyLogin}>
+                Connect with Spotify
+              </Button>
+
               <Button
                 variant="outline"
                 size="lg"
