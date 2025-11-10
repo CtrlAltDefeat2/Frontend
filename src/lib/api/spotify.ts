@@ -1,3 +1,5 @@
+import { useUIStore } from '@/store/ui.store'
+
 export type Playlist = {
   id: string
   name: string
@@ -5,7 +7,10 @@ export type Playlist = {
   tracksTotal: number
   tracksLink: string
 }
-async function fetchPlaylists(token: string): Promise<Playlist[]> {
+
+async function fetchPlaylists(token: string | null): Promise<Playlist[]> {
+  console.log('TOKEN ' + token)
+  if (token === null) return Promise.resolve([])
   const response = await fetch('https://api.spotify.com/v1/me/playlists', {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -36,7 +41,6 @@ async function fetchPlaylists(token: string): Promise<Playlist[]> {
 }
 
 export async function fetchUserPlaylists(): Promise<Playlist[]> {
-  const token = 'test' // aici se face fetch la token din local storage sau whatever dupa login
-  // fara o valoare aici, pagina nu se va afisa - inlocuiti cu token-ul vostru spotify
+  const token = useUIStore.getState().accessToken
   return await fetchPlaylists(token)
 }
