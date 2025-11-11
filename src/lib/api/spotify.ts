@@ -22,26 +22,40 @@ export type Track = {
   valence: number
 }
 
-async function fetchPlaylists(token: string | null): Promise<Playlist[]> {
-  if (token === null) return Promise.resolve([])
-  const response = await fetch('https://api.spotify.com/v1/me/playlists', {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
+type ApiFetchOptions = {
+  token?: string | null
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+  headers?: Record<string, string>
+  body?: string | null
+}
 
-  if (!response.ok) {
-    throw new Error(`Fetch error: ${response.status} ${response.statusText}`)
+async function apiFetch<T>(url: string, opts: ApiFetchOptions = {}): Promise<T> {
+  const { token = null, method = 'GET', headers = {}, body = null } = opts
+  const finalHeaders: Record<string, string> = {
+    Accept: 'application/json',
+    ...headers,
   }
+  if (token) finalHeaders['Authorization'] = `Bearer ${token}`
 
-  const data = await response.json()
-  return data.items.map(
+  const response = await fetch(url, { method, headers: finalHeaders, body })
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw new Error(`Fetch error: ${response.status} ${response.statusText} — ${text}`)
+  }
+  if (response.status === 204) return {} as T
+  return (await response.json()) as T
+}
+
+async function fetchPlaylists(token: string | null): Promise<Playlist[]> {
+  if (!token) return []
+  const data = await apiFetch<{ items: [] }>('https://api.spotify.com/v1/me/playlists', { token })
+  return (data.items ?? []).map(
     (item: {
       id: string
       name: string
       images: { url: string }[]
       tracks: { total: number; href: string }
-    }) => ({
+    }): Playlist => ({
       id: item.id,
       name: item.name,
       image: item.images?.[0]?.url,
@@ -53,87 +67,108 @@ async function fetchPlaylists(token: string | null): Promise<Playlist[]> {
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = []
-  for (let i = 0; i < arr.length; i += size) {
-    chunks.push(arr.slice(i, i + size))
-  }
+  for (let i = 0; i < arr.length; i += size) chunks.push(arr.slice(i, i + size))
   return chunks
 }
 
-export async function fetchSongs(token: string | null, playlistId: string): Promise<Track[]> {
-  if (token === null) return []
+async function fetchAllSpotifyTracks(
+  token: string,
+  playlistId: string,
+  total: number,
+): Promise<string[]> {
+  const limit = 50
+  let offset = 0
+  const ids: string[] = []
 
-  // 1) get tracks from spotify playlist
-  const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error(`Fetch error: ${response.status} ${response.statusText}`)
+  while (offset < total) {
+    const url = `https://api.spotify.com/v1/playlists/${encodeURIComponent(
+      playlistId,
+    )}/tracks?limit=${limit}&offset=${offset}`
+    const response = await apiFetch<{ items: { track?: { id?: string } }[] }>(url, { token })
+    const batchIds = (response.items ?? [])
+      .map((item) => item.track?.id)
+      .filter((id): id is string => !!id)
+    ids.push(...batchIds)
+    if (batchIds.length < limit) break
+    offset += limit
   }
 
-  const data = await response.json()
+  return ids
+}
 
-  // extract ONLY spotify track ids (strings)
-  const spotifyIds: string[] = data.items
-    .map((item: { track?: { id?: string | null } }) => item.track?.id ?? null)
-    .filter((id: string | null): id is string => id !== null)
+export async function fetchSongs(
+  token: string | null,
+  playlistId: string,
+  total: number,
+): Promise<Track[]> {
+  if (!token) return []
 
-  // 2) call reccobeats in batches to translate spotify ids -> recco track objects
+  const spotifyIds = await fetchAllSpotifyTracks(token, playlistId, total)
+  if (spotifyIds.length === 0) return []
+
   const batchSize = 40
   const spotifyIdBatches = chunkArray(spotifyIds, batchSize)
-
-  // we collect ALL reccobeats ids here
   const allReccoIds: string[] = []
 
   for (const batch of spotifyIdBatches) {
-    // batch is string[]
     const idsParam = encodeURIComponent(batch.join(','))
-    const r = await fetch(`https://api.reccobeats.com/v1/track?ids=${idsParam}`)
-    if (!r.ok) {
-      throw new Error(`Fetch error: ${r.status} ${r.statusText}`)
-    }
-    const reccoList = await r.json()
-    // assuming response shape: { items: [{ id: string, ... }] }
-    const idsFromThisBatch: string[] = (reccoList.items ?? []).map((it: { id: string }) => it.id)
+    const url = `https://api.reccobeats.com/v1/track?ids=${idsParam}`
+    const r = await apiFetch<{ content?: { id: string }[] }>(url)
+    const idsFromThisBatch = (r.content ?? []).map((it) => it.id)
     allReccoIds.push(...idsFromThisBatch)
   }
 
-  // 3) NOW: make ONE (batched) fetch for audio features from reccobeats
-  // if the API supports ?ids= like spotify:
-  const featureBatches = chunkArray(allReccoIds, batchSize)
-  const allTracks: Track[] = []
+  if (allReccoIds.length === 0) return []
 
-  for (const batch of featureBatches) {
-    const idsParam = encodeURIComponent(batch.join(','))
-    const f = await fetch(`https://api.reccobeats.com/v1/track/audio-features?ids=${idsParam}`)
-    if (!f.ok) {
-      throw new Error(`Fetch error: ${f.status} ${f.statusText}`)
+  const featurePromises = allReccoIds.map(async (id): Promise<Track | null> => {
+    const url = `https://api.reccobeats.com/v1/track/${id}/audio-features`
+    try {
+      const raw: Record<string, number> = await apiFetch(url)
+      const {
+        acousticness,
+        danceability,
+        energy,
+        instrumentalness,
+        key,
+        liveness,
+        loudness,
+        mode,
+        speechiness,
+        tempo,
+        valence,
+      } = raw
+      return {
+        acousticness,
+        danceability,
+        energy,
+        instrumentalness,
+        key,
+        liveness,
+        loudness,
+        mode,
+        speechiness,
+        tempo,
+        valence,
+      }
+    } catch {
+      return null
     }
-    const featuresJson = await f.json()
-    // assuming: { items: [ { id, href, acousticness, ... } ] }
-    const cleaned: Track[] = (featuresJson.items ?? []).map(
-      // type the param, then drop id & href, then cast
-      ({
-        id: _id,
-        href: _href,
-        ...rest
-      }: {
-        id: string
-        href: string
-      } & Track) => rest as Track,
-    )
+  })
 
-    allTracks.push(...cleaned)
-  }
-  console.log(allTracks)
-  return allTracks
+  return (await Promise.all(featurePromises)).filter((t): t is Track => t !== null)
 }
 
 export async function fetchUserPlaylists(): Promise<Playlist[]> {
   const token = useUIStore.getState().accessToken
-  const playlists = await fetchPlaylists(token)
-  await fetchSongs(token, playlists[0].id)
-  return playlists
+  try {
+    const playlists = await fetchPlaylists(token)
+    if (playlists.length > 0) {
+      const first = playlists[0]
+      const songsFeatures = await fetchSongs(token, first.id, first.tracksTotal)
+      console.log(songsFeatures)
+    } // asta trebuie scoasa de aici dupa ce se modifica butonu pe dashboard. also nu face fata api la toate requesturile
+    return playlists
+  } catch {
+    return []
+  }
 }
