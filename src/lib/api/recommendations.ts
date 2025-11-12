@@ -1,12 +1,14 @@
 // src/lib/api/recommendations.ts
+import { ReadingItem } from '@/lib/api/reading-list'
+
 export type BookRecommendation = {
   id: string
   title: string
   author: string
   cover?: string
-  matchScore: number // 0-100
-  reason: string
-  url: string
+  matchScore?: number // 0-100
+  reason?: string
+  url?: string
 }
 
 const BOOK_BY_PLAYLIST: Record<string, BookRecommendation> = {
@@ -75,19 +77,14 @@ const BOOK_BY_PLAYLIST: Record<string, BookRecommendation> = {
 export async function fetchRecommendationsByPlaylists(
   playlistIds: string[],
 ): Promise<BookRecommendation[]> {
-  await new Promise((r) => setTimeout(r, 600))
-  if (!playlistIds.length) return []
-
-  const used = new Set<string>()
-  const results: BookRecommendation[] = []
-
-  for (const pid of playlistIds) {
-    const rec = BOOK_BY_PLAYLIST[pid]
-    if (!rec) continue
-    if (used.has(rec.id)) continue
-    used.add(rec.id)
-    results.push(rec)
-  }
-
-  return results
+  const response = await fetch('http://localhost:8081/api/books')
+  const books: ReadingItem[] = await response.json()
+  const bookReccomendations: BookRecommendation[] = []
+  for (const book of books)
+    bookReccomendations.push({
+      id: book.id,
+      title: book.title,
+      author: book.authors,
+    })
+  return bookReccomendations
 }

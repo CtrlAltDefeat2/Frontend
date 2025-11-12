@@ -1,4 +1,5 @@
 import { useUIStore } from '@/store/ui.store'
+import { ApiError } from 'next/dist/server/api-utils'
 
 export type Playlist = {
   id: string
@@ -113,6 +114,7 @@ export async function fetchSongs(
   for (const batch of spotifyIdBatches) {
     const idsParam = encodeURIComponent(batch.join(','))
     const url = `https://api.reccobeats.com/v1/track?ids=${idsParam}`
+    await new Promise((resolve) => setTimeout(resolve, 2000))
     const r = await apiFetch<{ content?: { id: string }[] }>(url)
     const idsFromThisBatch = (r.content ?? []).map((it) => it.id)
     allReccoIds.push(...idsFromThisBatch)
@@ -123,6 +125,7 @@ export async function fetchSongs(
   const featurePromises = allReccoIds.map(async (id): Promise<Track | null> => {
     const url = `https://api.reccobeats.com/v1/track/${id}/audio-features`
     try {
+      await new Promise((resolve) => setTimeout(resolve, 2000))
       const raw: Record<string, number> = await apiFetch(url)
       const {
         acousticness,
@@ -160,6 +163,7 @@ export async function fetchSongs(
 
 export async function fetchUserPlaylists(): Promise<Playlist[]> {
   const token = useUIStore.getState().accessToken
+  console.log(token)
   try {
     const playlists = await fetchPlaylists(token)
     if (playlists.length > 0) {
