@@ -2,15 +2,16 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { usePlaylists } from '@/features/playlists/usePlaylists'
 import { useRecommendations } from '@/features/recommendations/useRecommendations'
 import type { Playlist } from '@/lib/api/spotify'
 import { useReadingList } from '@/features/reading-list/useReadingList'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Check, ListMusic, Loader2, BookMarked, Sparkles, Music2, ExternalLink } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { ListMusic, Loader2, BookMarked, Sparkles, Music2, ExternalLink } from 'lucide-react'
+import PlaylistCarousel from '@/components/ui/PlaylistCarousel'
 
 export default function DashboardPage() {
   const { data, isError, isLoading } = usePlaylists()
@@ -87,74 +88,8 @@ export default function DashboardPage() {
       </div>
 
       {/* playlists – COMPACT */}
-      <ul className="grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        <AnimatePresence initial={false}>
-          {data.map((p, idx) => {
-            const active = !!selected[p.id]
-            return (
-              <motion.li
-                key={p.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                transition={{ delay: idx * 0.02 }}
-              >
-                <button
-                  onClick={() => toggle(p)}
-                  className={[
-                    'group relative block text-left rounded-xl border border-border/60 bg-card shadow-sm transition',
-                    'hover:shadow-md focus-visible:ring-[3px] focus-visible:ring-ring/50 outline-none',
-                    active ? 'ring-2 ring-primary/70 border-primary/40' : '',
-                  ].join(' ')}
-                  aria-pressed={active}
-                >
-                  {/* selected badge */}
-                  <AnimatePresence>
-                    {active && (
-                      <motion.span
-                        initial={{ opacity: 0, scale: 0.9, y: -4 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: -4 }}
-                        className="absolute left-2.5 top-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary ring-1 ring-primary/30"
-                      >
-                        <Check className="h-3 w-3" />
-                        Selected
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
 
-                  <Card className="h-full overflow-hidden rounded-xl border-0">
-                    <CardContent className="p-3">
-                      <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-md bg-muted">
-                        {p.image ? (
-                          <img
-                            src={p.image}
-                            alt={`${p.name} cover`}
-                            className="h-full w-full object-cover transition group-hover:scale-[1.02]"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
-                            No image
-                          </div>
-                        )}
-                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/50 via-background/10 to-transparent opacity-0 transition group-hover:opacity-100" />
-                      </div>
-
-                      <div className="text-sm font-medium leading-tight line-clamp-2">{p.name}</div>
-                      <div className="text-xs text-muted-foreground">{p.tracksTotal} tracks</div>
-
-                      <p className="mt-1 text-[11px] text-muted-foreground">
-                        {active ? 'Selected ✓' : 'Used to inspire book matches.'}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </button>
-              </motion.li>
-            )
-          })}
-        </AnimatePresence>
-      </ul>
+      <PlaylistCarousel data={data} selected={selected} toggle={toggle} />
 
       {/* actions bar */}
       <div className="sticky bottom-4 mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card/80 p-3 backdrop-blur supports-[backdrop-filter]:bg-card/60">
