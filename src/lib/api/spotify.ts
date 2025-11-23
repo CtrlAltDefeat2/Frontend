@@ -161,18 +161,104 @@ export async function fetchSongs(
   return (await Promise.all(featurePromises)).filter((t): t is Track => t !== null)
 }
 
+// Aici ar trebui sa ramana doar return de fetchPlaylists(token) si restu ar trebui adaugat intr o functie ce e apelata cand e generate books de playlist selectat in ui
+// Restu functiei face astfel => ia song features din playlist => trimite la ai andrei => asteapta raspuns => trimite raspuns baza de date => asteapta carti
 export async function fetchUserPlaylists(): Promise<Playlist[]> {
   const token = useUIStore.getState().accessToken
-  console.log(token)
+
+  if (!token) {
+    console.warn('No access token found in UI store')
+    return []
+  }
+
   try {
     const playlists = await fetchPlaylists(token)
+
     if (playlists.length > 0) {
       const first = playlists[0]
-      const songsFeatures = await fetchSongs(token, first.id, first.tracksTotal)
-      console.log(songsFeatures)
-    } // asta trebuie scoasa de aici dupa ce se modifica butonu pe dashboard. also nu face fata api la toate requesturile
+
+      try {
+        const songsFeatures = await fetchSongs(token, first.id, first.tracksTotal) // 1. Playlist => song features
+        console.log('Songs features for first playlist:', songsFeatures)
+
+        const aiApiBase = process.env.NEXT_PUBLIC_AI_API_URL
+
+        if (!aiApiBase) {
+          console.warn('NEXT_PUBLIC_AI_API_URL is not defined')
+        } else {
+          // 2. Trimitem la Andrei
+          const aiResponse = await fetch(`${aiApiBase}/predict`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              playlistId: first.id,
+              playlistName: first.name,
+              tracksTotal: first.tracksTotal,
+              features: songsFeatures,
+            }),
+          })
+
+          if (!aiResponse.ok) {
+            const errorText = await aiResponse.text().catch(() => '')
+            console.error(
+              'AI API /predict error',
+              aiResponse.status,
+              aiResponse.statusText,
+              errorText,
+            )
+          } else {
+            const aiData = await aiResponse.json()
+            console.log('AI /predict response:', aiData)
+
+            // 3. De la Andrei la Backend
+            const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL
+
+            if (!backendBase) {
+              console.warn('NEXT_PUBLIC_BACKEND_URL is not defined')
+            } else {
+              try {
+                const backendResponse = await fetch(backendBase, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    playlistId: first.id,
+                    playlistName: first.name,
+                    tracksTotal: first.tracksTotal,
+                    aiResult: aiData,
+                  }),
+                })
+
+                if (!backendResponse.ok) {
+                  const backendErrorText = await backendResponse.text().catch(() => '')
+                  console.error(
+                    'Backend POST error',
+                    backendResponse.status,
+                    backendResponse.statusText,
+                    backendErrorText,
+                  )
+                } else {
+                  const backendData = await backendResponse.json().catch(() => null)
+                  console.log('Backend response:', backendData)
+                  // 4. Acest backend data ar fi lista de carti sugerate, candva chiar va fi
+                }
+              } catch (err) {
+                console.error('Error while calling BACKEND endpoint:', err)
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error while fetching songs features or calling AI / BACKEND:', err)
+      }
+    }
+
     return playlists
-  } catch {
+  } catch (err) {
+    console.error('Error while fetching user playlists:', err)
     return []
   }
 }
