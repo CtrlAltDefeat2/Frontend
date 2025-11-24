@@ -12,12 +12,15 @@ import { useReadingList } from '@/features/reading-list/useReadingList'
 import { motion } from 'framer-motion'
 import { ListMusic, Loader2, BookMarked, Sparkles, Music2, ExternalLink } from 'lucide-react'
 import PlaylistCarousel from '@/components/ui/PlaylistCarousel'
+import { initiateSpotifyLogin } from '@/lib/api/spotify-login'
+import { useUIStore } from '@/store/ui.store'
 
 export default function DashboardPage() {
   const { data, isError, isLoading } = usePlaylists()
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const { mutate, data: recs, isPending, reset } = useRecommendations()
   const { add, items } = useReadingList()
+  const clearTokens = useUIStore((s) => s.clearTokens)
 
   const toggle = (p: Playlist) => setSelected((s) => ({ ...s, [p.id]: !s[p.id] }))
 
@@ -56,7 +59,17 @@ export default function DashboardPage() {
           Try reconnecting your Spotify account or creating a few playlists — they’re the base for
           your book recommendations.
         </p>
-        <Button className="mt-5" onClick={() => window.location.reload()}>
+        <Button
+          className="mt-5"
+          onClick={() => {
+            clearTokens()
+            try {
+              initiateSpotifyLogin()
+            } catch {
+              toast.error('Failed to reconnect. Please try again.')
+            }
+          }}
+        >
           Reconnect Spotify
         </Button>
       </main>
