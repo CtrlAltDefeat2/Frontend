@@ -42,5 +42,8 @@ async function fetchPlaylists(token: string | null): Promise<Playlist[]> {
 
 export async function fetchUserPlaylists(): Promise<Playlist[]> {
   const token = useUIStore.getState().accessToken
+  if (!token) {
+    throw new Error('Missing Spotify access token')
+  }
   return await fetchPlaylists(token)
 }
