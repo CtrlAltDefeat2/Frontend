@@ -37,9 +37,8 @@ function writeStore(items: ReadingItem[]) {
 }
 
 export async function fetchReadingList(): Promise<ReadingItem[]> {
-  const response = await fetch('http://localhost:8081/api/books')
-  console.log(response.json())
-  return await response.json()
+  await new Promise((r) => setTimeout(r, 200))
+  return readStore()
 }
 
 export async function addToReadingList(item: ReadingItem): Promise<void> {
