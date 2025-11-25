@@ -1,10 +1,20 @@
-// mock reading list API with localStorage persistence
 export type ReadingItem = {
   id: string
   title: string
-  author: string
-  cover?: string
-  url?: string
+  authors: string
+  emotionsJson: string
+  emotions: {
+    Fear: number
+    Anger: number
+    Anticipation: number
+    Trust: number
+    Surprise: number
+    Sadness: number
+    Joy: number
+    Disgust: number
+    Positive: number
+    Negative: number
+  }
 }
 
 const STORAGE_KEY = 'reading-list-v1'
@@ -27,9 +37,9 @@ function writeStore(items: ReadingItem[]) {
 }
 
 export async function fetchReadingList(): Promise<ReadingItem[]> {
-  // mic delay sa semene cu un api call
-  await new Promise((r) => setTimeout(r, 200))
-  return readStore()
+  const response = await fetch('http://localhost:8081/api/books')
+  console.log(response.json())
+  return await response.json()
 }
 
 export async function addToReadingList(item: ReadingItem): Promise<void> {
