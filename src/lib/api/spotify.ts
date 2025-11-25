@@ -24,6 +24,22 @@ export type Track = {
   valence: number
 }
 
+export type ReccobeatsAudioFeatures = {
+  id: string
+  href: string
+  acousticness: number
+  danceability: number
+  energy: number
+  instrumentalness: number
+  key: number
+  liveness: number
+  loudness: number
+  mode: number
+  speechiness: number
+  tempo: number
+  valence: number
+}
+
 type ApiFetchOptions = {
   token?: string | null
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -115,51 +131,42 @@ export async function fetchSongs(
   for (const batch of spotifyIdBatches) {
     const idsParam = encodeURIComponent(batch.join(','))
     const url = `https://api.reccobeats.com/v1/track?ids=${idsParam}`
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+
     const r = await apiFetch<{ content?: { id: string }[] }>(url)
-    const idsFromThisBatch = (r.content ?? []).map((it) => it.id)
-    allReccoIds.push(...idsFromThisBatch)
+    const idsFromBatch = (r.content ?? []).map((it) => it.id)
+
+    allReccoIds.push(...idsFromBatch)
   }
 
   if (allReccoIds.length === 0) return []
 
-  const featurePromises = allReccoIds.map(async (id): Promise<Track | null> => {
-    const url = `https://api.reccobeats.com/v1/track/${id}/audio-features`
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      const raw: Record<string, number> = await apiFetch(url)
-      const {
-        acousticness,
-        danceability,
-        energy,
-        instrumentalness,
-        key,
-        liveness,
-        loudness,
-        mode,
-        speechiness,
-        tempo,
-        valence,
-      } = raw
-      return {
-        acousticness,
-        danceability,
-        energy,
-        instrumentalness,
-        key,
-        liveness,
-        loudness,
-        mode,
-        speechiness,
-        tempo,
-        valence,
-      }
-    } catch {
-      return null
-    }
-  })
+  const reccoIdBatches = chunkArray(allReccoIds, 40)
+  const allFeatures: Track[] = []
 
-  return (await Promise.all(featurePromises)).filter((t): t is Track => t !== null)
+  for (const batch of reccoIdBatches) {
+    const idsParam = encodeURIComponent(batch.join(','))
+    const url = `https://api.reccobeats.com/v1/audio-features?ids=${idsParam}`
+
+    const r = await apiFetch<{ content?: ReccobeatsAudioFeatures[] }>(url)
+
+    for (const f of r.content ?? []) {
+      allFeatures.push({
+        acousticness: f.acousticness,
+        danceability: f.danceability,
+        energy: f.energy,
+        instrumentalness: f.instrumentalness,
+        key: f.key,
+        liveness: f.liveness,
+        loudness: f.loudness,
+        mode: f.mode,
+        speechiness: f.speechiness,
+        tempo: f.tempo,
+        valence: f.valence,
+      })
+    }
+  }
+
+  return allFeatures
 }
 
 // Aici ar trebui sa ramana doar return de fetchPlaylists(token) si restu ar trebui adaugat intr o functie ce e apelata cand e generate books de playlist selectat in ui
