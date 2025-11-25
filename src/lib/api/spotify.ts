@@ -1,5 +1,6 @@
 import { useUIStore } from '@/store/ui.store'
 import { ApiError } from 'next/dist/server/api-utils'
+import { BookRecommendation } from '@/lib/api/recommendations'
 
 export type Playlist = {
   id: string
@@ -172,93 +173,77 @@ export async function fetchUserPlaylists(): Promise<Playlist[]> {
   }
 
   try {
-    const playlists = await fetchPlaylists(token)
-
-    if (playlists.length > 0) {
-      const first = playlists[0]
-
-      try {
-        const songsFeatures = await fetchSongs(token, first.id, first.tracksTotal) // 1. Playlist => song features
-        console.log('Songs features for first playlist:', songsFeatures)
-
-        const aiApiBase = process.env.NEXT_PUBLIC_AI_API_URL
-
-        if (!aiApiBase) {
-          console.warn('NEXT_PUBLIC_AI_API_URL is not defined')
-        } else {
-          // 2. Trimitem la Andrei
-          const aiResponse = await fetch(`${aiApiBase}/predict`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              playlistId: first.id,
-              playlistName: first.name,
-              tracksTotal: first.tracksTotal,
-              features: songsFeatures,
-            }),
-          })
-
-          if (!aiResponse.ok) {
-            const errorText = await aiResponse.text().catch(() => '')
-            console.error(
-              'AI API /predict error',
-              aiResponse.status,
-              aiResponse.statusText,
-              errorText,
-            )
-          } else {
-            const aiData = await aiResponse.json()
-            console.log('AI /predict response:', aiData)
-
-            // 3. De la Andrei la Backend
-            const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL
-
-            if (!backendBase) {
-              console.warn('NEXT_PUBLIC_BACKEND_URL is not defined')
-            } else {
-              try {
-                const backendResponse = await fetch(backendBase, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    playlistId: first.id,
-                    playlistName: first.name,
-                    tracksTotal: first.tracksTotal,
-                    aiResult: aiData,
-                  }),
-                })
-
-                if (!backendResponse.ok) {
-                  const backendErrorText = await backendResponse.text().catch(() => '')
-                  console.error(
-                    'Backend POST error',
-                    backendResponse.status,
-                    backendResponse.statusText,
-                    backendErrorText,
-                  )
-                } else {
-                  const backendData = await backendResponse.json().catch(() => null)
-                  console.log('Backend response:', backendData)
-                  // 4. Acest backend data ar fi lista de carti sugerate, candva chiar va fi
-                }
-              } catch (err) {
-                console.error('Error while calling BACKEND endpoint:', err)
-              }
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Error while fetching songs features or calling AI / BACKEND:', err)
-      }
-    }
-
-    return playlists
+    return await fetchPlaylists(token)
   } catch (err) {
     console.error('Error while fetching user playlists:', err)
     return []
   }
+}
+
+export async function generateBookRecommendations(
+  playlistIds: string[],
+): Promise<BookRecommendation[]> {
+  const token = useUIStore.getState().accessToken
+  if (!token) throw new Error('No access token')
+
+  const allBooks: BookRecommendation[] = []
+
+  const playlists = await fetchPlaylists(token)
+  const selectedPlaylists = playlists.filter((p) => playlistIds.includes(p.id))
+
+  for (const playlist of selectedPlaylists) {
+    try {
+      const songsFeatures = await fetchSongs(token, playlist.id, playlist.tracksTotal)
+      console.log(`Songs features for "${playlist.name}":`, songsFeatures)
+
+      const aiApiBase = process.env.NEXT_PUBLIC_AI_API_URL
+      if (!aiApiBase) throw new Error('AI_API_URL not configured')
+
+      // 2. Trimitem la Andrei
+      const aiResponse = await fetch(`${aiApiBase}/predict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playlistId: playlist.id,
+          playlistName: playlist.name,
+          tracksTotal: playlist.tracksTotal,
+          features: songsFeatures,
+        }),
+      })
+
+      if (!aiResponse.ok) {
+        throw new Error(`AI API error: ${aiResponse.status}`)
+      }
+
+      const aiData = await aiResponse.json()
+      console.log('AI response:', aiData)
+
+      // 3. De la Andrei la Backend
+      const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL
+      if (!backendBase) throw new Error('BACKEND_URL not configured')
+
+      const backendResponse = await fetch(backendBase, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playlistId: playlist.id,
+          playlistName: playlist.name,
+          tracksTotal: playlist.tracksTotal,
+          aiResult: aiData,
+        }),
+      })
+
+      if (!backendResponse.ok) {
+        throw new Error(`Backend error: ${backendResponse.status}`)
+      }
+
+      const books = await backendResponse.json()
+      // 4. Acest backend data ar fi lista de carti sugerate, candva chiar va fi
+      allBooks.push(...(Array.isArray(books) ? books : [books]))
+    } catch (err) {
+      console.error(`Error processing playlist "${playlist.name}":`, err)
+    }
+  }
+
+  return allBooks
 }
