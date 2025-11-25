@@ -228,13 +228,7 @@ export default function DashboardPage() {
                         className="w-full"
                         disabled={isSaved}
                         onClick={() => {
-                          add({
-                            id: b.id,
-                            title: b.title,
-                            author: b.author,
-                            cover: b.cover,
-                            url: b.url,
-                          })
+                          // add()
                           toast.success(`Saved "${b.title}" to your reading list`)
                         }}
                       >
