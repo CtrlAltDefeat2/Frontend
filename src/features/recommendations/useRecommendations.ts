@@ -1,9 +1,19 @@
 'use client'
 import { useMutation } from '@tanstack/react-query'
-import { fetchRecommendationsByPlaylists, type BookRecommendation } from '@/lib/api/recommendations'
+import { generateBookRecommendations } from '@/lib/api/spotify'
+import { toast } from 'sonner'
 
 export function useRecommendations() {
-  return useMutation<BookRecommendation[], Error, { playlistIds: string[] }>({
-    mutationFn: async ({ playlistIds }) => fetchRecommendationsByPlaylists(playlistIds),
+  return useMutation({
+    mutationFn: async ({ playlistIds }: { playlistIds: string[] }) => {
+      return await generateBookRecommendations(playlistIds)
+    },
+    onSuccess: (data) => {
+      console.log('Generated recommendations:', data)
+    },
+    onError: (error) => {
+      toast.error('Failed to generate recommendations')
+      console.error(error)
+    },
   })
 }
