@@ -65,6 +65,7 @@ export default function CallbackPage() {
           spotifyData.access_token,
           spotifyData.refresh_token,
         )
+        console.log('Raspuns backend: ', backendData.token)
 
         // 3. Salvăm token-ul primit de la Java (JWT)
         if (backendData && backendData.token) {

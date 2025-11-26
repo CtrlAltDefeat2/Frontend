@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8080'
+const API_BASE_URL = 'http://127.0.0.1:8081'
 
 export async function loginToBackend(spotifyAccessToken: string, spotifyRefreshToken: string) {
   try {
@@ -17,6 +17,7 @@ export async function loginToBackend(spotifyAccessToken: string, spotifyRefreshT
       const errorText = await res.text()
       throw new Error(`Backend login failed: ${res.status} ${errorText}`)
     }
+    console.log(res)
 
     return await res.json()
   } catch (error) {
