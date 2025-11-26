@@ -172,7 +172,7 @@ export async function fetchSongs(
 // Aici ar trebui sa ramana doar return de fetchPlaylists(token) si restu ar trebui adaugat intr o functie ce e apelata cand e generate books de playlist selectat in ui
 // Restu functiei face astfel => ia song features din playlist => trimite la ai andrei => asteapta raspuns => trimite raspuns baza de date => asteapta carti
 export async function fetchUserPlaylists(): Promise<Playlist[]> {
-  const token = useUIStore.getState().accessToken
+  const token = useUIStore.getState().spotifyAccessToken
 
   if (!token) {
     console.warn('No access token found in UI store')
@@ -190,7 +190,7 @@ export async function fetchUserPlaylists(): Promise<Playlist[]> {
 export async function generateBookRecommendations(
   playlistIds: string[],
 ): Promise<BookRecommendation[]> {
-  const token = useUIStore.getState().accessToken
+  const token = useUIStore.getState().spotifyAccessToken
   if (!token) throw new Error('No access token')
 
   const allBooks: BookRecommendation[] = []

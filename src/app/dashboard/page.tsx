@@ -15,8 +15,38 @@ import PlaylistCarousel from '@/components/ui/PlaylistCarousel'
 import { initiateSpotifyLogin } from '@/lib/api/spotify-login'
 import { useUIStore } from '@/store/ui.store'
 
+const cartiHardcodate = [
+  { titlu: 'The Man Without Qualities', autor: 'Robert Musil' },
+  { titlu: 'The Radetzky March', autor: 'Joseph Roth' },
+  { titlu: 'Berlin Alexanderplatz', autor: 'Alfred Döblin' },
+  { titlu: 'Journey to the End of the Night', autor: 'Louis-Ferdinand Céline' },
+  { titlu: "Life: A User's Manual", autor: 'Georges Perec' },
+  { titlu: 'The Tartar Steppe', autor: 'Dino Buzzati' },
+  { titlu: 'The Leopard', autor: 'Giuseppe Tomasi di Lampedusa' },
+  { titlu: 'The Book of Disquiet', autor: 'Fernando Pessoa' },
+  { titlu: 'The Invention of Morel', autor: 'Adolfo Bioy Casares' },
+  { titlu: 'Hopscotch', autor: 'Julio Cortázar' },
+  { titlu: 'The Death of Artemio Cruz', autor: 'Carlos Fuentes' },
+  { titlu: 'Hunger', autor: 'Knut Hamsun' },
+  { titlu: 'Independent People', autor: 'Halldór Laxness' },
+  { titlu: 'The Street of Crocodiles', autor: 'Bruno Schulz' },
+  { titlu: 'The Emigrants', autor: 'W.G. Sebald' },
+  { titlu: 'The Good Soldier', autor: 'Ford Madox Ford' },
+  { titlu: 'Under the Volcano', autor: 'Malcolm Lowry' },
+  { titlu: 'The Recognitions', autor: 'William Gaddis' },
+  { titlu: 'Pale Fire', autor: 'Vladimir Nabokov' },
+  { titlu: 'The Woman in the Dunes', autor: 'Kobo Abe' },
+  { titlu: 'Snow Country', autor: 'Yasunari Kawabata' },
+  { titlu: 'The Blind Owl', autor: 'Sadegh Hedayat' },
+  { titlu: 'Season of Migration to the North', autor: 'Tayeb Salih' },
+  { titlu: 'The Palm-Wine Drinkard', autor: 'Amos Tutuola' },
+  { titlu: 'The Notebooks of Malte Laurids Brigge', autor: 'Rainer Maria Rilke' },
+]
+
 export default function DashboardPage() {
   const { data, isError, isLoading } = usePlaylists()
+  const [carte, setCarti] = useState('')
+  const [autor, setAutor] = useState('')
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const { mutate, data: recs, isPending, reset } = useRecommendations()
   const { add, items } = useReadingList()
@@ -35,6 +65,13 @@ export default function DashboardPage() {
   const generate = () => {
     reset()
     mutate({ playlistIds: selectedIds })
+    setTimeout(pickRandomBook, 1000)
+  }
+
+  const pickRandomBook = () => {
+    const randomIndex = Math.floor(Math.random() * cartiHardcodate.length)
+    setCarti(cartiHardcodate[randomIndex].titlu)
+    setAutor(cartiHardcodate[randomIndex].autor)
   }
 
   if (isLoading) {
@@ -125,9 +162,11 @@ export default function DashboardPage() {
         </Button>
 
         <span className="text-sm text-muted-foreground">
-          {selectedIds.length === 0
-            ? 'Pick at least one playlist.'
-            : `Selected: ${selectedIds.length}`}
+          {carte === ''
+            ? selectedIds.length === 0
+              ? 'Pick at least one playlist.'
+              : `Selected: ${selectedIds.length}`
+            : carte + ' - ' + autor}
         </span>
 
         {recs && recs.length > 0 && (
