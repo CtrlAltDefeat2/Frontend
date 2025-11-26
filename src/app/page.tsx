@@ -50,11 +50,15 @@ export default function CallbackPage() {
         setSpotifyTokens(spotifyData.access_token, spotifyData.refresh_token)
         sessionStorage.removeItem('code_verifier')
 
-        const backendData = await loginToBackend(spotifyData.access_token)
+        const backendData = await loginToBackend(
+          spotifyData.access_token,
+          spotifyData.refresh_token,
+        )
 
         if (backendData.token) {
           setBackendToken(backendData.token)
-          toast.success(`Welcome, ${backendData.displayName || 'User'}!`)
+          toast.success(`Welcome back!`)
+          router.push('/dashboard')
         } else {
           throw new Error('Backend did not return a token')
         }
