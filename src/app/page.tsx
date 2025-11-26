@@ -1,90 +1,60 @@
 'use client'
-import { useEffect, useRef } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { getToken } from '@/lib/api/spotify-login'
-import { loginToBackend } from '@/lib/api/backend-auth'
-import { useUIStore } from '@/store/ui.store'
-import { toast } from 'sonner'
 
-export default function CallbackPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
+import { initiateSpotifyLogin } from '@/lib/api/spotify-login'
 
-  const { setSpotifyTokens, setBackendToken } = useUIStore()
-
-  const processedRef = useRef(false)
-
-  useEffect(() => {
-    const handleCallback = async () => {
-      if (processedRef.current) return
-
-      const code = searchParams.get('code')
-      const error = searchParams.get('error')
-
-      if (error) {
-        toast.error('Authorization failed', { description: error })
-        router.push('/')
-        return
-      }
-
-      if (!code) {
-        return
-      }
-
-      processedRef.current = true
-
-      const codeVerifier = sessionStorage.getItem('code_verifier')
-      if (!codeVerifier) {
-        toast.error('Missing code verifier')
-        router.push('/')
-        return
-      }
-
-      try {
-        const spotifyData = await getToken(code, codeVerifier)
-
-        if (spotifyData.error) {
-          throw new Error(spotifyData.error_description || spotifyData.error)
-        }
-
-        setSpotifyTokens(spotifyData.access_token, spotifyData.refresh_token)
-        sessionStorage.removeItem('code_verifier')
-
-        const backendData = await loginToBackend(
-          spotifyData.access_token,
-          spotifyData.refresh_token,
-        )
-
-        if (backendData.token) {
-          setBackendToken(backendData.token)
-          toast.success(`Welcome back!`)
-          router.push('/dashboard')
-        } else {
-          throw new Error('Backend did not return a token')
-        }
-
-        router.push('/dashboard')
-      } catch (error) {
-        console.error('Authentication flow failed:', error)
-        toast.error('Failed to authenticate', {
-          description: error instanceof Error ? error.message : 'Unknown error',
-        })
-        router.push('/')
-      }
+export default function LandingPage() {
+  const handleLogin = async () => {
+    try {
+      await initiateSpotifyLogin()
+    } catch (error) {
+      console.error('Failed to init login', error)
     }
-
-    handleCallback()
-  }, [searchParams, router, setSpotifyTokens, setBackendToken])
+  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center space-y-4">
-        <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        <div>
-          <h2 className="text-lg font-semibold">Finalizing Login...</h2>
-          <p className="text-muted-foreground">Connecting your Spotify account to our servers.</p>
+    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-black text-white">
+      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex flex-col">
+        <h1 className="text-4xl font-bold mb-8 text-green-500">Spotify Book Recommender</h1>
+
+        <div className="text-center space-y-6 max-w-md">
+          <p className="text-xl text-gray-300">
+            Conectează-te cu Spotify pentru a descoperi cărți bazate pe gusturile tale muzicale.
+          </p>
+
+          {/* Butonul Oficial de Login */}
+          <button
+            onClick={handleLogin}
+            className="bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold py-4 px-10 rounded-full transition-all transform hover:scale-105 text-lg"
+          >
+            Connect with Spotify
+          </button>
+
+          {/* Buton SECRET pentru Testare Locală (Fără Backend) */}
+          <div className="mt-12 pt-8 border-t border-gray-800">
+            <p className="text-xs text-gray-500 mb-2">Development Mode</p>
+            <button
+              onClick={() => {
+                // Setăm token-uri false și mergem direct la dashboard
+                localStorage.setItem(
+                  'app-storage',
+                  JSON.stringify({
+                    state: {
+                      spotifyAccessToken: 'fake-token',
+                      backendToken: 'fake-jwt',
+                      theme: 'dark',
+                    },
+                    version: 0,
+                  }),
+                )
+                window.location.href = '/dashboard'
+              }}
+              className="text-xs text-gray-400 hover:text-white underline border border-gray-700 px-4 py-2 rounded"
+            >
+              Skip Login (Mock Data Mode)
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

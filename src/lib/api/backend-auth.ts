@@ -9,22 +9,19 @@ export async function loginToBackend(spotifyAccessToken: string, spotifyRefreshT
       },
       body: JSON.stringify({
         accessToken: spotifyAccessToken,
-        refreshToken: spotifyRefreshToken,
+        refreshToken: spotifyRefreshToken, // Trimitem și refresh token
       }),
     })
 
-    // --- DEBUGGING ---
     if (!res.ok) {
-      console.log('Status:', res.status) // Vedem daca e 403, 500 sau 400
       const errorText = await res.text()
-      console.log('Error body:', errorText) // Vedem mesajul de eroare de la Java
+      // Aici e important să aruncăm eroarea ca să o prindă CallbackPage
       throw new Error(`Backend login failed: ${res.status} ${errorText}`)
     }
-    // -----------------
 
     return await res.json()
   } catch (error) {
     console.error('Error logging into backend:', error)
-    throw error
+    throw error // Retrimitem eroarea sus, către pagina de callback
   }
 }
