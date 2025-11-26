@@ -1,60 +1,173 @@
 'use client'
-
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { toast } from 'sonner'
 import { initiateSpotifyLogin } from '@/lib/api/spotify-login'
 
-export default function LandingPage() {
-  const handleLogin = async () => {
+export default function Home() {
+  const router = useRouter()
+
+  const handleSpotifyLogin = async () => {
     try {
       await initiateSpotifyLogin()
     } catch (error) {
-      console.error('Failed to init login', error)
+      console.error(error)
+      toast.error('Failed to connect', {
+        description: 'Could not initiate Spotify login. Please try again.',
+      })
     }
   }
 
+  const handleMockLogin = () => {
+    localStorage.setItem(
+      'app-storage',
+      JSON.stringify({
+        state: {
+          spotifyAccessToken: 'fake-token',
+          backendToken: 'fake-jwt',
+          theme: 'dark',
+        },
+        version: 0,
+      }),
+    )
+
+    toast.success('Demo Mode Activated', {
+      description: 'Entering dashboard with sample data...',
+    })
+
+    router.push('/dashboard')
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-black text-white">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex flex-col">
-        <h1 className="text-4xl font-bold mb-8 text-green-500">Spotify Book Recommender</h1>
+    <main className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-background via-background to-background/60">
+      <section className="mx-auto max-w-6xl px-6 py-16 lg:py-24">
+        <div className="grid items-center gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-7">
+            <span className="inline-flex items-center rounded-full border px-3 py-1 text-xs text-muted-foreground">
+              Book recommendations from your Spotify taste
+            </span>
+            <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+              Turn your Spotify playlists
+              <br className="hidden sm:block" />
+              into smarter <span className="text-primary">book picks</span>
+            </h1>
+            <p className="mt-4 max-w-2xl text-base text-muted-foreground">
+              Choose one or more of your playlists as signals, map mood and energy to genres and
+              themes, and get a curated reading list that matches your vibe.
+            </p>
 
-        <div className="text-center space-y-6 max-w-md">
-          <p className="text-xl text-gray-300">
-            Conectează-te cu Spotify pentru a descoperi cărți bazate pe gusturile tale muzicale.
-          </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button size="lg" className="px-6" onClick={handleSpotifyLogin}>
+                Connect with Spotify
+              </Button>
 
-          {/* Butonul Oficial de Login */}
-          <button
-            onClick={handleLogin}
-            className="bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold py-4 px-10 rounded-full transition-all transform hover:scale-105 text-lg"
-          >
-            Connect with Spotify
-          </button>
+              <Button variant="outline" size="lg" onClick={handleMockLogin}>
+                Try a quick demo
+              </Button>
+            </div>
 
-          {/* Buton SECRET pentru Testare Locală (Fără Backend) */}
-          <div className="mt-12 pt-8 border-t border-gray-800">
-            <p className="text-xs text-gray-500 mb-2">Development Mode</p>
-            <button
-              onClick={() => {
-                // Setăm token-uri false și mergem direct la dashboard
-                localStorage.setItem(
-                  'app-storage',
-                  JSON.stringify({
-                    state: {
-                      spotifyAccessToken: 'fake-token',
-                      backendToken: 'fake-jwt',
-                      theme: 'dark',
-                    },
-                    version: 0,
-                  }),
-                )
-                window.location.href = '/dashboard'
-              }}
-              className="text-xs text-gray-400 hover:text-white underline border border-gray-700 px-4 py-2 rounded"
-            >
-              Skip Login (Mock Data Mode)
-            </button>
+            <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+              <li>• Secure connection with Spotify</li>
+              <li>• Your listening data stays private</li>
+              <li>• Save reading lists to your account</li>
+            </ul>
+          </div>
+
+          <div className="lg:col-span-5">
+            <div className="rounded-2xl border bg-card p-4 shadow-sm">
+              <div className="grid grid-cols-3 gap-3">
+                {['Moody Fiction', 'Focus Non-fiction', 'Weekend Escapes'].map((name, i) => (
+                  <div
+                    key={i}
+                    className="aspect-[3/4] rounded-xl bg-muted/70 ring-1 ring-border/50"
+                    aria-label={name}
+                    title={name}
+                  />
+                ))}
+              </div>
+              <div className="mt-4 space-y-2">
+                <div className="h-2 w-3/4 rounded bg-muted" />
+                <div className="h-2 w-1/2 rounded bg-muted" />
+              </div>
+              <div className="mt-4 flex gap-2">
+                <Button className="flex-1" disabled>
+                  Generate books
+                </Button>
+                <Button variant="outline" className="flex-1" disabled>
+                  Save reading list
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 pb-16">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Feature
+            title="Seed with your playlists"
+            desc="Pick 1–3 of your playlists to reflect mood, energy, and taste."
+          />
+          <Feature
+            title="Smart mapping"
+            desc="We translate audio features into book genres, pacing, themes, and tone."
+          />
+          <Feature
+            title="One-click save"
+            desc="Review, tweak, and save as a personal reading list."
+          />
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 pb-20">
+        <h2 className="mb-6 text-2xl font-semibold">How it works</h2>
+        <ol className="grid gap-4 sm:grid-cols-3">
+          {[
+            ['Connect', 'Sign in with Spotify (secure PKCE).'],
+            ['Select seeds', 'Choose playlists that best represent your vibe.'],
+            ['Generate & save', 'Get book picks, adjust genres/themes, save your list.'],
+          ].map(([title, desc], i) => (
+            <Card key={i} className="h-full">
+              <CardContent className="p-5">
+                <div className="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                  {i + 1}
+                </div>
+                <div className="text-base font-medium">{title}</div>
+                <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </ol>
+      </section>
+
+      <section className="border-t bg-background/40">
+        <div className="mx-auto max-w-6xl px-6 py-12 text-center">
+          <h3 className="text-2xl font-semibold">Ready to find your next read?</h3>
+          <p className="mt-2 text-muted-foreground">
+            Start from your playlists and let the book recommendations flow.
+          </p>
+          <div className="mt-6">
+            <Link href="/dashboard">
+              <Button size="lg" className="px-8">
+                Open dashboard
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
     </main>
+  )
+}
+
+function Feature({ title, desc }: { title: string; desc: string }) {
+  return (
+    <Card className="h-full">
+      <CardContent className="p-5">
+        <div className="mb-2 text-base font-semibold">{title}</div>
+        <p className="text-sm text-muted-foreground">{desc}</p>
+      </CardContent>
+    </Card>
   )
 }

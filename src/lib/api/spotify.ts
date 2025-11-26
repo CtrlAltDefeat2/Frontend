@@ -1,8 +1,5 @@
 import { useUIStore } from '@/store/ui.store'
 
-// --- 1. TIPURI DE DATE ---
-
-// Tipul pentru playlist-ul final folosit în aplicație
 export type Playlist = {
   id: string
   name: string
@@ -11,7 +8,6 @@ export type Playlist = {
   tracksLink: string
 }
 
-// Tipul pentru o carte
 export type Book = {
   isbn: string
   title: string
@@ -22,8 +18,6 @@ export type Book = {
   matchScore: number
 }
 
-// [NOU] Interfața pentru datele brute care vin de la Spotify API
-// Asta rezolvă eroarea de "unexpected any"
 interface SpotifyApiPlaylist {
   id: string
   name: string
@@ -34,7 +28,6 @@ interface SpotifyApiPlaylist {
   }
 }
 
-// --- 2. DATE FALSE (MOCK) ---
 const MOCK_PLAYLISTS: Playlist[] = [
   {
     id: 'mock-1',
@@ -80,12 +73,9 @@ const MOCK_BOOKS: Book[] = [
   },
 ]
 
-// --- 3. FUNCȚIILE DE FETCH ---
-
 async function fetchPlaylists(token: string | null): Promise<Playlist[]> {
   if (!token) return Promise.resolve([])
 
-  // Mock check
   if (token === 'fake-token') {
     await new Promise((resolve) => setTimeout(resolve, 500))
     return MOCK_PLAYLISTS
@@ -99,8 +89,6 @@ async function fetchPlaylists(token: string | null): Promise<Playlist[]> {
 
   const data = await response.json()
 
-  // AICI AM REPARAT EROAREA:
-  // În loc de (item: any), folosim (item: SpotifyApiPlaylist)
   return data.items.map((item: SpotifyApiPlaylist) => ({
     id: item.id,
     name: item.name,
