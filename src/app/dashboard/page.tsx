@@ -87,17 +87,25 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Your Spotify Playlists</h1>
             <p className="text-sm text-muted-foreground">
-              Select one or more playlists to generate personalized book recommendations based on
-              your listening mood.
+              Select one or more playlists to generate personalized book or movie recommendations
+              based on your listening mood.
             </p>
           </div>
         </div>
 
-        <Link href="/reading-list">
-          <Button variant="outline" size="sm">
-            View reading list ({items.length})
-          </Button>
-        </Link>
+        <div className="flex flex-col gap-7">
+          <Link href="/reading-list">
+            <Button variant="outline" size="sm" className="w-full">
+              View reading list ({items.length})
+            </Button>
+          </Link>
+
+          <Link href="/watch-list">
+            <Button variant="outline" size="sm" className="w-full">
+              View watch list ({items.length}) {/* trb inlocuit cu watchlist.length*/}
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* playlists – COMPACT */}
@@ -167,7 +175,8 @@ export default function DashboardPage() {
         {/* empty */}
         {!isPending && (!recs || recs.length === 0) && (
           <p className="text-sm text-muted-foreground">
-            No recommendations yet. Select some playlists and click <strong>Generate books</strong>.
+            No recommendations yet. Select some playlists and click <strong>Generate books</strong>{' '}
+            or <strong>Generate movies</strong>.
           </p>
         )}
 

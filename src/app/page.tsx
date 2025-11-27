@@ -23,16 +23,16 @@ export default function Home() {
         <div className="grid items-center gap-10 lg:grid-cols-12">
           <div className="lg:col-span-7">
             <span className="inline-flex items-center rounded-full border px-3 py-1 text-xs text-muted-foreground">
-              Book recommendations from your Spotify taste
+              Book and movie recommendations from your Spotify taste
             </span>
             <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
               Turn your Spotify playlists
               <br className="hidden sm:block" />
-              into smarter <span className="text-primary">book picks</span>
+              into smarter <span className="text-primary">book or movie picks</span>
             </h1>
             <p className="mt-4 max-w-2xl text-base text-muted-foreground">
               Choose one or more of your playlists as signals, map mood and energy to genres and
-              themes, and get a curated reading list that matches your vibe.
+              themes, and get a curated reading or watch list that matches your vibe.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -46,7 +46,7 @@ export default function Home() {
                 onClick={() =>
                   toast('Demo mode', {
                     description:
-                      'This is a preview. After connecting Spotify, we’ll generate real book recommendations.',
+                      'This is a preview. After connecting Spotify, we’ll generate real book or movie recommendations.',
                   })
                 }
               >
@@ -57,7 +57,7 @@ export default function Home() {
             <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
               <li>• Secure connection with Spotify</li>
               <li>• Your listening data stays private</li>
-              <li>• Save reading lists to your account</li>
+              <li>• Save reading and watch lists to your account</li>
             </ul>
           </div>
 
@@ -79,9 +79,9 @@ export default function Home() {
                 <div className="h-2 w-1/2 rounded bg-muted" />
               </div>
               <div className="mt-4 flex gap-2">
-                <Button className="flex-1">Generate books</Button>
+                <Button className="flex-1">Generate recommendations</Button>
                 <Button variant="outline" className="flex-1">
-                  Save reading list
+                  Save & Enjoy
                 </Button>
               </div>
             </div>
@@ -98,11 +98,11 @@ export default function Home() {
           />
           <Feature
             title="Smart mapping"
-            desc="We translate audio features into book genres, pacing, themes, and tone."
+            desc="We translate audio features into book or movie genres, pacing, themes, and tone."
           />
           <Feature
             title="One-click save"
-            desc="Review, tweak, and save as a personal reading list."
+            desc="Review, tweak, and save as a personal reading or watch list."
           />
         </div>
       </section>
@@ -114,7 +114,7 @@ export default function Home() {
           {[
             ['Connect', 'Sign in with Spotify (secure PKCE).'],
             ['Select seeds', 'Choose playlists that best represent your vibe.'],
-            ['Generate & save', 'Get book picks, adjust genres/themes, save your list.'],
+            ['Generate & save', 'Get book or movie picks, adjust genres/themes, save your list.'],
           ].map(([title, desc], i) => (
             <Card key={i} className="h-full">
               <CardContent className="p-5">
@@ -132,9 +132,9 @@ export default function Home() {
       {/* CTA */}
       <section className="border-t bg-background/40">
         <div className="mx-auto max-w-6xl px-6 py-12 text-center">
-          <h3 className="text-2xl font-semibold">Ready to find your next read?</h3>
+          <h3 className="text-2xl font-semibold">Ready to find your next read or watch?</h3>
           <p className="mt-2 text-muted-foreground">
-            Start from your playlists and let the book recommendations flow.
+            Start from your playlists and let the book and movie recommendations flow.
           </p>
           <div className="mt-6">
             <Link href="/dashboard">

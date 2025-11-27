@@ -93,7 +93,7 @@ export default function PlaylistCarousel({ data, selected, toggle }: PlaylistCar
                         {p.tracksTotal} tracks
                       </div>
                       <p className="mt-1 text-[11px] text-muted-foreground ">
-                        {active ? 'Selected ✓' : 'Used to inspire book matches.'}
+                        {active ? 'Selected ✓' : 'Used to inspire book and movie matches.'}
                       </p>
                     </CardContent>
                   </Card>
