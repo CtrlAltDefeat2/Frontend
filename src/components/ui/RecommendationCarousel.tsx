@@ -33,12 +33,9 @@ export default function RecommendationCarousel({
   const containerRef = useRef<HTMLDivElement>(null)
   const [cardsPerPage, setCardsPerPage] = useState(1)
 
-  // State pentru paginare și pentru detectarea schimbărilor în items
   const [page, setPage] = useState(0)
   const [prevItems, setPrevItems] = useState(items)
 
-  // FIX ESLint: Resetăm pagina direct în render loop (Derived State Pattern)
-  // Dacă lista de itemi s-a schimbat față de ultima randare, resetăm pagina la 0.
   if (items !== prevItems) {
     setPrevItems(items)
     setPage(0)
@@ -71,7 +68,6 @@ export default function RecommendationCarousel({
 
   return (
     <div className="relative w-full" ref={containerRef}>
-      {/* items-start e critic aici ca să nu întindă cardurile pe înălțime */}
       <ul className="flex gap-5 justify-center items-start min-h-[350px]">
         <AnimatePresence mode="popLayout" initial={false}>
           {visibleItems.map((item) => {
@@ -84,7 +80,7 @@ export default function RecommendationCarousel({
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="flex-shrink-0 w-44" // 176px
+                className="flex-shrink-0 w-44"
               >
                 {/* CONTAINER PRINCIPAL */}
                 <div className="group relative flex flex-col w-full overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1">
@@ -94,7 +90,7 @@ export default function RecommendationCarousel({
                     {item.matchScore}%
                   </div>
 
-                  {/* ZONA IMAGINE (Flush top) */}
+                  {/* ZONA IMAGINE */}
                   <div className="relative aspect-[2/3] w-full bg-muted">
                     {item.cover ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -115,13 +111,12 @@ export default function RecommendationCarousel({
                       </div>
                     )}
 
-                    {/* Gradient subtil */}
                     <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
                   </div>
 
-                  {/* ZONA CONȚINUT */}
+                  {/* ZONA CONTINUT */}
                   <div className="flex flex-col p-3 gap-3">
-                    {/* Header: Titlu + Autor/An */}
+                    {/* Header: Titlu + Autor + An */}
                     <div>
                       <h3
                         className="text-sm font-semibold leading-tight line-clamp-1 text-foreground"
