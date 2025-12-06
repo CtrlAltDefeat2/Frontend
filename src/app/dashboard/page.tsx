@@ -12,12 +12,22 @@ import { useReadingList } from '@/features/reading-list/useReadingList'
 import { motion } from 'framer-motion'
 import { ListMusic, Loader2, BookMarked, Sparkles, Music2, ExternalLink } from 'lucide-react'
 import PlaylistCarousel from '@/components/ui/PlaylistCarousel'
+import { initiateSpotifyLogin } from '@/lib/api/spotify-login'
+import { useUIStore } from '@/store/ui.store'
+import { useMovieRecommendations } from '@/features/recommendations/useMovieRecommendations'
 
 export default function DashboardPage() {
   const { data, isError, isLoading } = usePlaylists()
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const { mutate, data: recs, isPending, reset } = useRecommendations()
-  const { add, items } = useReadingList()
+  const { items } = useReadingList()
+  const clearTokens = useUIStore((s) => s.clearTokens)
+  const {
+    mutate: mutateMovies,
+    data: movieRecs,
+    isPending: isMoviePending,
+    reset: resetMovies,
+  } = useMovieRecommendations()
 
   const toggle = (p: Playlist) => setSelected((s) => ({ ...s, [p.id]: !s[p.id] }))
 
@@ -56,7 +66,17 @@ export default function DashboardPage() {
           Try reconnecting your Spotify account or creating a few playlists — they’re the base for
           your book recommendations.
         </p>
-        <Button className="mt-5" onClick={() => window.location.reload()}>
+        <Button
+          className="mt-5"
+          onClick={() => {
+            clearTokens()
+            try {
+              initiateSpotifyLogin()
+            } catch {
+              toast.error('Failed to reconnect. Please try again.')
+            }
+          }}
+        >
           Reconnect Spotify
         </Button>
       </main>
@@ -74,17 +94,25 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Your Spotify Playlists</h1>
             <p className="text-sm text-muted-foreground">
-              Select one or more playlists to generate personalized book recommendations based on
-              your listening mood.
+              Select one or more playlists to generate personalized book or movie recommendations
+              based on your listening mood.
             </p>
           </div>
         </div>
 
-        <Link href="/reading-list">
-          <Button variant="outline" size="sm">
-            View reading list ({items.length})
-          </Button>
-        </Link>
+        <div className="flex flex-col gap-7">
+          <Link href="/reading-list">
+            <Button variant="outline" size="sm" className="w-full">
+              View reading list ({items.length})
+            </Button>
+          </Link>
+
+          <Link href="/watch-list">
+            <Button variant="outline" size="sm" className="w-full">
+              View watch list ({items.length}) {/* trb inlocuit cu watchlist.length*/}
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* playlists – COMPACT */}
@@ -107,6 +135,28 @@ export default function DashboardPage() {
             <span className="inline-flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
               Generate books
+            </span>
+          )}
+        </Button>
+
+        <Button
+          onClick={() => {
+            resetMovies()
+            mutateMovies({ playlistIds: selectedIds })
+          }}
+          disabled={selectedIds.length === 0 || isMoviePending}
+          className="px-5"
+          variant="secondary"
+        >
+          {isMoviePending ? (
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Generating…
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              Generate movies
             </span>
           )}
         </Button>
@@ -154,7 +204,8 @@ export default function DashboardPage() {
         {/* empty */}
         {!isPending && (!recs || recs.length === 0) && (
           <p className="text-sm text-muted-foreground">
-            No recommendations yet. Select some playlists and click <strong>Generate books</strong>.
+            No recommendations yet. Select some playlists and click <strong>Generate books</strong>{' '}
+            or <strong>Generate movies</strong>.
           </p>
         )}
 
@@ -215,13 +266,7 @@ export default function DashboardPage() {
                         className="w-full"
                         disabled={isSaved}
                         onClick={() => {
-                          add({
-                            id: b.id,
-                            title: b.title,
-                            author: b.author,
-                            cover: b.cover,
-                            url: b.url,
-                          })
+                          // add()
                           toast.success(`Saved "${b.title}" to your reading list`)
                         }}
                       >
