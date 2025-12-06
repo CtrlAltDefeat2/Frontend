@@ -107,7 +107,7 @@ export default function PlaylistCarousel({ data, selected, toggle }: PlaylistCar
       {page > 0 && (
         <button
           onClick={() => setPage(page - 1)}
-          className="absolute top-1/2 left-0 -translate-y-1/2 rounded-full bg-background/80 p-2 shadow hover:bg-background/90"
+          className="absolute top-1/2 left-0 -translate-y-1/2 rounded-full bg-background/80 p-2 shadow hover:bg-background/90 cursor-pointer"
         >
           <ChevronLeft className="h-5 w-5 text-primary" />
         </button>
@@ -115,7 +115,7 @@ export default function PlaylistCarousel({ data, selected, toggle }: PlaylistCar
       {page < pageCount - 1 && (
         <button
           onClick={() => setPage(page + 1)}
-          className="absolute top-1/2 right-0 -translate-y-1/2 rounded-full bg-background/80 p-2 shadow hover:bg-background/90"
+          className="absolute top-1/2 right-0 -translate-y-1/2 rounded-full bg-background/80 p-2 shadow hover:bg-background/90 cursor-pointer"
         >
           <ChevronRight className="h-5 w-5 text-primary" />
         </button>

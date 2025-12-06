@@ -5,24 +5,73 @@ import Link from 'next/link'
 import { CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  ListMusic,
+  Loader2,
+  BookMarked,
+  Sparkles,
+  Music2,
+  ExternalLink,
+  Clapperboard,
+  Film,
+  BookOpen,
+  CheckCircle2,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+// Store & Auth
+import { useUIStore } from '@/store/ui.store'
+import { initiateSpotifyLogin } from '@/lib/api/spotify-login'
+import type { Playlist } from '@/lib/api/spotify'
+
+// Features - Books
 import { usePlaylists } from '@/features/playlists/usePlaylists'
 import { useRecommendations } from '@/features/recommendations/useRecommendations'
-import type { Playlist } from '@/lib/api/spotify'
 import { useReadingList } from '@/features/reading-list/useReadingList'
-import { motion } from 'framer-motion'
-import { ListMusic, Loader2, BookMarked, Sparkles, Music2, ExternalLink } from 'lucide-react'
+import type { ReadingItem } from '@/lib/api/reading-list'
+
+// Features - Movies
+import { useMovieRecommendations } from '@/features/recommendations/useMovieRecommendations'
+import { useWatchList } from '@/features/watch-list/useWatchList'
+
+// Components
 import PlaylistCarousel from '@/components/ui/PlaylistCarousel'
-import { initiateSpotifyLogin } from '@/lib/api/spotify-login'
-import { useUIStore } from '@/store/ui.store'
+import RecommendationCarousel from '@/components/ui/RecommendationCarousel'
+
+// Types
+import { type BookRecommendation, type MovieRecommendation } from '@/lib/api/recommendations'
+
+type Mode = 'books' | 'movies'
+type RecommendationItem = BookRecommendation | MovieRecommendation
 
 export default function DashboardPage() {
-  const { data, isError, isLoading } = usePlaylists()
+  const { data: playlists, isError, isLoading } = usePlaylists()
   const [selected, setSelected] = useState<Record<string, boolean>>({})
-  const { mutate, data: recs, isPending, reset } = useRecommendations()
-  const { add, items } = useReadingList()
+  const [mode, setMode] = useState<Mode>('books')
+
   const clearTokens = useUIStore((s) => s.clearTokens)
 
-  const toggle = (p: Playlist) => setSelected((s) => ({ ...s, [p.id]: !s[p.id] }))
+  // Books Logic
+  const {
+    mutate: generateBooks,
+    data: bookRecs,
+    isPending: isPendingBooks,
+    reset: resetBooks,
+  } = useRecommendations()
+  const { add: addBook, items: readingList } = useReadingList()
+
+  // Movies Logic
+  const {
+    mutate: generateMovies,
+    data: movieRecs,
+    isPending: isPendingMovies,
+    reset: resetMovies,
+  } = useMovieRecommendations()
+  const { add: addMovie, items: watchList } = useWatchList()
+
+  // Shared Logic
+  const togglePlaylist = (p: Playlist) => setSelected((s) => ({ ...s, [p.id]: !s[p.id] }))
 
   const selectedIds = useMemo(
     () =>
@@ -32,10 +81,20 @@ export default function DashboardPage() {
     [selected],
   )
 
-  const generate = () => {
-    reset()
-    mutate({ playlistIds: selectedIds })
+  const handleGenerate = () => {
+    if (mode === 'books') {
+      resetMovies()
+      generateBooks({ playlistIds: selectedIds })
+    } else {
+      resetBooks()
+      generateMovies({ playlistIds: selectedIds })
+    }
   }
+
+  // determine current active states
+  const isPending = mode === 'books' ? isPendingBooks : isPendingMovies
+  const results = mode === 'books' ? bookRecs : movieRecs
+  const hasResults = results && results.length > 0
 
   if (isLoading) {
     return (
@@ -51,13 +110,13 @@ export default function DashboardPage() {
     )
   }
 
-  if (isError || !data?.length) {
+  if (isError || !playlists?.length) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center text-center text-muted-foreground">
         <p className="text-lg font-medium">No playlists found</p>
         <p className="mt-1 text-sm max-w-sm">
           Try reconnecting your Spotify account or creating a few playlists — they’re the base for
-          your book recommendations.
+          your recommendations.
         </p>
         <Button
           className="mt-5"
@@ -78,8 +137,8 @@ export default function DashboardPage() {
 
   return (
     <main className="mx-auto max-w-[1600px] px-10 py-12">
-      {/* header */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      {/* HEADER & NAV */}
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-6">
         <div className="flex items-center gap-3">
           <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-card">
             <ListMusic className="h-5 w-5" />
@@ -87,47 +146,77 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Your Spotify Playlists</h1>
             <p className="text-sm text-muted-foreground">
-              Select one or more playlists to generate personalized book or movie recommendations
-              based on your listening mood.
+              Select playlists to influence your recommendations.
             </p>
           </div>
         </div>
 
-        <div className="flex flex-col gap-7">
+        <div className="flex gap-3">
           <Link href="/reading-list">
-            <Button variant="outline" size="sm" className="w-full">
-              View reading list ({items.length})
+            <Button variant="outline" size="sm" className="gap-2">
+              <BookOpen className="h-4 w-4" />
+              Reading list <span className="text-muted-foreground">({readingList.length})</span>
             </Button>
           </Link>
 
           <Link href="/watch-list">
-            <Button variant="outline" size="sm" className="w-full">
-              View watch list ({items.length}) {/* trb inlocuit cu watchlist.length*/}
+            <Button variant="outline" size="sm" className="gap-2">
+              <Film className="h-4 w-4" />
+              Watch list <span className="text-muted-foreground">({watchList.length})</span>
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* playlists – COMPACT */}
+      {/* MODE SWITCHER */}
+      <div className="mb-6 flex justify-center">
+        <div className="inline-flex items-center rounded-lg border border-border/50 bg-muted/40 p-1">
+          <button
+            onClick={() => setMode('books')}
+            className={cn(
+              'flex items-center gap-2 rounded-md px-4 py-1.5 text-sm font-medium transition-all',
+              mode === 'books'
+                ? 'bg-background text-foreground shadow-sm ring-1 ring-border/50'
+                : 'text-muted-foreground hover:text-foreground cursor-pointer',
+            )}
+          >
+            <BookOpen className="h-4 w-4" />
+            Books
+          </button>
+          <button
+            onClick={() => setMode('movies')}
+            className={cn(
+              'flex items-center gap-2 rounded-md px-4 py-1.5 text-sm font-medium transition-all',
+              mode === 'movies'
+                ? 'bg-background text-foreground shadow-sm ring-1 ring-border/50'
+                : 'text-muted-foreground hover:text-foreground cursor-pointer',
+            )}
+          >
+            <Clapperboard className="h-4 w-4" />
+            Movies
+          </button>
+        </div>
+      </div>
 
-      <PlaylistCarousel data={data} selected={selected} toggle={toggle} />
+      {/* PLAYLISTS CAROUSEL */}
+      <PlaylistCarousel data={playlists} selected={selected} toggle={togglePlaylist} />
 
-      {/* actions bar */}
-      <div className="sticky bottom-4 mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card/80 p-3 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      {/* ACTIONS BAR */}
+      <div className="sticky bottom-4 z-20 mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-border/60 bg-card/80 p-3 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <Button
-          onClick={generate}
+          onClick={handleGenerate}
           disabled={selectedIds.length === 0 || isPending}
-          className="px-5"
+          className="min-w-[160px] px-5 transition-all"
         >
           {isPending ? (
             <span className="inline-flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Generating…
+              Processing...
             </span>
           ) : (
             <span className="inline-flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
-              Generate books
+              Generate {mode}
             </span>
           )}
         </Button>
@@ -135,10 +224,10 @@ export default function DashboardPage() {
         <span className="text-sm text-muted-foreground">
           {selectedIds.length === 0
             ? 'Pick at least one playlist.'
-            : `Selected: ${selectedIds.length}`}
+            : `Selected: ${selectedIds.length} playlists`}
         </span>
 
-        {recs && recs.length > 0 && (
+        {hasResults && mode === 'books' && (
           <Button
             variant="ghost"
             onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
@@ -149,14 +238,20 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* recommendations – COMPACT */}
-      <section className="mt-8">
-        <div className="mb-2 flex items-center gap-2">
-          <Music2 className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold tracking-tight">Recommendations</h2>
+      {/* RECOMMENDATIONS SECTION */}
+      <section className="mt-10 min-h-[300px]">
+        <div className="mb-4 flex items-center gap-2">
+          {mode === 'books' ? (
+            <BookOpen className="h-5 w-5 text-primary" />
+          ) : (
+            <Clapperboard className="h-5 w-5 text-primary" />
+          )}
+          <h2 className="text-lg font-semibold tracking-tight capitalize">
+            {mode} Recommendations
+          </h2>
         </div>
 
-        {/* skeletons */}
+        {/* Loading Skeletons */}
         {isPending && (
           <div className="grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -172,90 +267,126 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* empty */}
-        {!isPending && (!recs || recs.length === 0) && (
-          <p className="text-sm text-muted-foreground">
-            No recommendations yet. Select some playlists and click <strong>Generate books</strong>{' '}
-            or <strong>Generate movies</strong>.
-          </p>
+        {/* Empty State */}
+        {!isPending && !hasResults && (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-muted/10 py-12 text-center">
+            <p className="text-sm text-muted-foreground">
+              No recommendations yet. Select playlists above and click{' '}
+              <strong className="text-foreground">Generate {mode}</strong>.
+            </p>
+          </div>
         )}
 
-        {/* results */}
-        {!isPending && recs && recs.length > 0 && (
-          <ul className="grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {recs.map((b, idx) => {
-              const isSaved = items.some((it) => it.id === b.id)
-              return (
-                <motion.li
-                  key={b.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.02 }}
-                  className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm transition hover:shadow-md"
-                >
-                  <div className="relative aspect-[3/4] w-full bg-muted">
-                    {b.cover && (
-                      <img
-                        src={b.cover}
-                        alt={`Cover ${b.title}`}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    )}
+        {/* RESULTS DISPLAY */}
+        {!isPending && hasResults && (
+          <>
+            {mode === 'movies' ? (
+              // MODE: MOVIES (CAROUSEL)
+              <RecommendationCarousel
+                items={results}
+                mode="movies"
+                isSaved={(id) => watchList.some((item) => item.id === id)}
+                onSave={(item) => {
+                  addMovie(item as MovieRecommendation)
+                  toast.success('Saved to watch list')
+                }}
+              />
+            ) : (
+              // MODE: BOOKS
+              <ul className="grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <AnimatePresence mode="popLayout">
+                  {results.map((item: RecommendationItem, idx: number) => {
+                    const isBook = true
+                    const isSaved = readingList.some((it) => it.id === item.id)
 
-                    <div className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-background/80 px-1.5 py-0.5 text-[10px] font-medium text-foreground/80 ring-1 ring-border/60 backdrop-blur">
-                      Match: <span className="font-semibold">{b.matchScore}%</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3">
-                    <h3 className="text-sm font-semibold leading-snug line-clamp-2">{b.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{b.author}</p>
-
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="rounded-full border px-2 py-0.5 text-[10px]">
-                        From playlists
-                      </span>
-
-                      {b.url && (
-                        <a
-                          href={b.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:underline"
-                        >
-                          View <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
-                      )}
-                    </div>
-
-                    <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{b.reason}</p>
-
-                    <CardFooter className="mt-3 px-0">
-                      <Button
-                        size="sm"
-                        className="w-full"
-                        disabled={isSaved}
-                        onClick={() => {
-                          // add()
-                          toast.success(`Saved "${b.title}" to your reading list`)
-                        }}
+                    return (
+                      <motion.li
+                        key={item.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ delay: idx * 0.03 }}
+                        className="group overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm transition-all hover:shadow-md hover:border-border"
                       >
-                        {isSaved ? (
-                          <span className="inline-flex items-center gap-2">
-                            <BookMarked className="h-4 w-4" />
-                            Saved
-                          </span>
-                        ) : (
-                          'Save to reading list'
-                        )}
-                      </Button>
-                    </CardFooter>
-                  </div>
-                </motion.li>
-              )
-            })}
-          </ul>
+                        {/* Cover Image */}
+                        <div className="relative aspect-[3/4] w-full bg-muted">
+                          {item.cover && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={item.cover}
+                              alt={item.title}
+                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              loading="lazy"
+                            />
+                          )}
+                          <div className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-1.5 py-0.5 text-[10px] font-medium text-foreground ring-1 ring-border/60 backdrop-blur">
+                            {item.matchScore}% match
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex flex-col p-3">
+                          <h3 className="line-clamp-2 text-sm font-semibold leading-snug">
+                            {item.title}
+                          </h3>
+
+                          <div className="mt-1 flex items-center justify-between gap-2">
+                            <p className="line-clamp-1 text-xs text-muted-foreground">
+                              {(item as BookRecommendation).author}
+                            </p>
+                          </div>
+
+                          {item.url && (
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary hover:underline"
+                            >
+                              View details <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+
+                          <p className="mt-2 line-clamp-2 text-[11px] text-muted-foreground/80 italic">
+                            &quot;{item.reason}&quot;
+                          </p>
+
+                          <CardFooter className="mt-3 p-0 pt-2">
+                            <Button
+                              size="sm"
+                              className={cn(
+                                'w-full transition-all',
+                                isSaved
+                                  ? 'bg-muted text-muted-foreground hover:bg-muted'
+                                  : 'bg-primary text-primary-foreground',
+                              )}
+                              disabled={isSaved}
+                              onClick={() => {
+                                addBook(item as unknown as ReadingItem)
+                                toast.success('Saved to reading list')
+                              }}
+                            >
+                              {isSaved ? (
+                                <span className="inline-flex items-center gap-1.5">
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  Saved
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5">
+                                  <BookMarked className="h-3.5 w-3.5" />
+                                  Save
+                                </span>
+                              )}
+                            </Button>
+                          </CardFooter>
+                        </div>
+                      </motion.li>
+                    )
+                  })}
+                </AnimatePresence>
+              </ul>
+            )}
+          </>
         )}
       </section>
     </main>
