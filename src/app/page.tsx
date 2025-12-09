@@ -4,6 +4,26 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { initiateSpotifyLogin } from '@/lib/api/spotify-login'
+import { Sparkles } from 'lucide-react'
+import PlaylistCard from '@/components/ui/PlaylistCard'
+
+const mockPlaylists = [
+  {
+    name: 'Moody nights',
+    image: 'https://picsum.photos/300?random=1',
+    tracksTotal: 42,
+  },
+  {
+    name: 'Focus time',
+    image: 'https://picsum.photos/300?random=2',
+    tracksTotal: 18,
+  },
+  {
+    name: 'Weekend Escapes',
+    image: 'https://picsum.photos/300?random=3',
+    tracksTotal: 27,
+  },
+]
 
 export default function Home() {
   const handleSpotifyLogin = () => {
@@ -65,24 +85,32 @@ export default function Home() {
             <div className="rounded-2xl border bg-card p-4 shadow-sm">
               {/* simple mock preview */}
               <div className="grid grid-cols-3 gap-3">
-                {['Moody Fiction', 'Focus Non-fiction', 'Weekend Escapes'].map((name, i) => (
-                  <div
-                    key={i}
-                    className="aspect-[3/4] rounded-xl bg-muted/70 ring-1 ring-border/50"
-                    aria-label={name}
-                    title={name}
+                {mockPlaylists.map((playlist, index) => (
+                  <PlaylistCard
+                    key={index}
+                    playlist={{
+                      id: '',
+                      name: playlist.name,
+                      image: playlist.image,
+                      tracksTotal: playlist.tracksTotal,
+                      tracksLink: '',
+                    }}
                   />
                 ))}
               </div>
-              <div className="mt-4 space-y-2">
-                <div className="h-2 w-3/4 rounded bg-muted" />
-                <div className="h-2 w-1/2 rounded bg-muted" />
-              </div>
-              <div className="mt-4 flex gap-2">
-                <Button className="flex-1">Generate recommendations</Button>
-                <Button variant="outline" className="flex-1">
-                  Save & Enjoy
+              <div className="sticky bottom-4 z-20 flex items-center gap-3 rounded-xl border border-border/60 bg-card/80 p-3 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+                <Button
+                  onClick={() => (window.location.href = 'http://127.0.0.1:3000/dashboard')}
+                  className="min-w-[6px] px-3 py-1.5 text-sm transition-all"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    Generate recommendations
+                  </span>
                 </Button>
+                <span className="text-sm text-muted-foreground">
+                  Select one or multiple playlists.
+                </span>
               </div>
             </div>
           </div>
