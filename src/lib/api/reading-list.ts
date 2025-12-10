@@ -37,8 +37,9 @@ function writeStore(items: ReadingItem[]) {
 }
 
 export async function fetchReadingList(): Promise<ReadingItem[]> {
-  await new Promise((r) => setTimeout(r, 200))
-  return readStore()
+  // await new Promise((r) => setTimeout(r, 200))
+  // return readStore()
+  return Promise.resolve([])
 }
 
 export async function addToReadingList(item: ReadingItem): Promise<void> {

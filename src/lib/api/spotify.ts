@@ -203,54 +203,59 @@ export async function generateBookRecommendations(
       const songsFeatures = await fetchSongs(token, playlist.id, playlist.tracksTotal)
       console.log(`Songs features for "${playlist.name}":`, songsFeatures)
 
-      const aiApiBase = process.env.NEXT_PUBLIC_AI_API_URL
-      if (!aiApiBase) throw new Error('AI_API_URL not configured')
+      // const aiApiBase = process.env.NEXT_PUBLIC_AI_API_URL
+      // if (!aiApiBase) throw new Error('AI_API_URL not configured')
+      //
+      // // 2. Trimitem la Andrei
+      // const aiResponse = await fetch(`${aiApiBase}/predict`, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     playlistId: playlist.id,
+      //     playlistName: playlist.name,
+      //     tracksTotal: playlist.tracksTotal,
+      //     features: songsFeatures,
+      //   }),
+      // })
 
-      // 2. Trimitem la Andrei
-      const aiResponse = await fetch(`${aiApiBase}/predict`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          playlistId: playlist.id,
-          playlistName: playlist.name,
-          tracksTotal: playlist.tracksTotal,
-          features: songsFeatures,
-        }),
-      })
+      // if (!aiResponse.ok) {
+      //   //throw new Error(`AI API error: ${aiResponse.status}`)
+      // }
 
-      if (!aiResponse.ok) {
-        throw new Error(`AI API error: ${aiResponse.status}`)
-      }
-
-      const aiData = await aiResponse.json()
-      console.log('AI response:', aiData)
-
-      // 3. De la Andrei la Backend
-      const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL
-      if (!backendBase) throw new Error('BACKEND_URL not configured')
-
-      const backendResponse = await fetch(backendBase, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          playlistId: playlist.id,
-          playlistName: playlist.name,
-          tracksTotal: playlist.tracksTotal,
-          aiResult: aiData,
-        }),
-      })
-
-      if (!backendResponse.ok) {
-        throw new Error(`Backend error: ${backendResponse.status}`)
-      }
-
-      const books = await backendResponse.json()
-      // 4. Acest backend data ar fi lista de carti sugerate, candva chiar va fi
-      allBooks.push(...(Array.isArray(books) ? books : [books]))
+      // const aiData = await aiResponse.json()
+      // console.log('AI response:', aiData)
+      //
+      // // 3. De la Andrei la Backend
+      // const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL
+      // //if (!backendBase) throw new Error('BACKEND_URL not configured')
+      //
+      // const backendResponse = await fetch(backendBase, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     playlistId: playlist.id,
+      //     playlistName: playlist.name,
+      //     tracksTotal: playlist.tracksTotal,
+      //     aiResult: aiData,
+      //   }),
+      // })
+      // //
+      // // if (!backendResponse.ok) {
+      // //   throw new Error(`Backend error: ${backendResponse.status}`)
+      // // }
+      //
+      // const books = await backendResponse.json()
+      // // 4. Acest backend data ar fi lista de carti sugerate, candva chiar va fi
+      // allBooks.push(...(Array.isArray(books) ? books : [books]))
     } catch (err) {
       console.error(`Error processing playlist "${playlist.name}":`, err)
     }
   }
 
-  return allBooks
+  const book: BookRecommendation = {
+    id: '1',
+    title: 'title1',
+    author: 'author1',
+  }
+  return Promise.resolve([book])
 }
