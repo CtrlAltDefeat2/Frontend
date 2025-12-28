@@ -6,12 +6,12 @@ import { CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
+import AuthGuard from '@/components/common/AuthGuard'
 import {
   ListMusic,
   Loader2,
   BookMarked,
   Sparkles,
-  Music2,
   ExternalLink,
   Clapperboard,
   Film,
@@ -46,6 +46,14 @@ type Mode = 'books' | 'movies'
 type RecommendationItem = BookRecommendation | MovieRecommendation
 
 export default function DashboardPage() {
+  return (
+    <AuthGuard>
+      <DashboardContent />
+    </AuthGuard>
+  )
+}
+
+function DashboardContent() {
   const { data: playlists, isError, isLoading } = usePlaylists()
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [mode, setMode] = useState<Mode>('books')
@@ -296,7 +304,6 @@ export default function DashboardPage() {
               <ul className="grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 <AnimatePresence mode="popLayout">
                   {results.map((item: RecommendationItem, idx: number) => {
-                    const isBook = true
                     const isSaved = readingList.some((it) => it.id === item.id)
 
                     return (
