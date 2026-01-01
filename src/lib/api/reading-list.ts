@@ -15,6 +15,7 @@ export type ReadingItem = {
     Positive: number
     Negative: number
   }
+  read?: boolean
 }
 
 const STORAGE_KEY = 'reading-list-v1'
@@ -44,7 +45,16 @@ export async function fetchReadingList(): Promise<ReadingItem[]> {
 export async function addToReadingList(item: ReadingItem): Promise<void> {
   const items = readStore()
   if (!items.find((b) => b.id === item.id)) {
-    items.unshift(item)
+    items.unshift({ ...item, read: false })
+    writeStore(items)
+  }
+}
+
+export async function toggleReadStatus(id: string): Promise<void> {
+  const items = readStore()
+  const item = items.find((b) => b.id === id)
+  if (item) {
+    item.read = !item.read
     writeStore(items)
   }
 }

@@ -5,6 +5,7 @@ import {
   addToReadingList,
   removeFromReadingList,
   clearReadingList,
+  toggleReadStatus,
   type ReadingItem,
 } from '@/lib/api/reading-list'
 
@@ -71,6 +72,23 @@ export function useReadingList() {
     onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
   })
 
+  const toggleRead = useMutation({
+    mutationFn: toggleReadStatus,
+    onMutate: async (id: string) => {
+      await qc.cancelQueries({ queryKey: KEY })
+      const prev = qc.getQueryData<ReadingItem[]>(KEY) || []
+
+      const next = prev.map((b) => (b.id === id ? { ...b, read: !b.read } : b))
+
+      qc.setQueryData(KEY, next)
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(KEY, ctx.prev)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
+  })
+
   return {
     items: data,
     isLoading,
@@ -78,5 +96,6 @@ export function useReadingList() {
     add: add.mutate,
     remove: remove.mutate,
     clear: clear.mutate,
+    toggleRead: toggleRead.mutate,
   }
 }
