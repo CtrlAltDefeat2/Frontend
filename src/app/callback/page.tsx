@@ -44,10 +44,19 @@ export default function CallbackPage() {
         }
 
         setTokens(data.access_token, data.refresh_token)
+
         sessionStorage.removeItem('code_verifier')
 
         toast.success('Connected successfully!')
-        router.push('/dashboard')
+
+        const returnTo = sessionStorage.getItem('return_to')
+
+        if (returnTo) {
+          sessionStorage.removeItem('return_to')
+          router.push(returnTo)
+        } else {
+          router.push('/dashboard')
+        }
       } catch (error) {
         console.error('Token exchange failed:', error)
         toast.error('Failed to authenticate', {

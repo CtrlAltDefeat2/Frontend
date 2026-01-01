@@ -7,6 +7,7 @@ export type WatchItem = {
   matchScore?: number
   reason?: string
   url?: string
+  watched?: boolean
 }
 
 const STORAGE_KEY = 'watch-list-v1'
@@ -36,7 +37,16 @@ export async function fetchWatchList(): Promise<WatchItem[]> {
 export async function addToWatchList(item: WatchItem): Promise<void> {
   const items = readStore()
   if (!items.find((m) => m.id === item.id)) {
-    items.unshift(item)
+    items.unshift({ ...item, watched: false })
+    writeStore(items)
+  }
+}
+
+export async function toggleWatchedStatus(id: string): Promise<void> {
+  const items = readStore()
+  const item = items.find((m) => m.id === id)
+  if (item) {
+    item.watched = !item.watched
     writeStore(items)
   }
 }
