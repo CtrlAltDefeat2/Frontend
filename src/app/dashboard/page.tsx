@@ -317,17 +317,17 @@ function DashboardContent() {
                       >
                         {/* Cover Image */}
                         <div className="relative aspect-[3/4] w-full bg-muted">
-                          {item.cover && (
+                          {item.imageUrl && (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
-                              src={item.cover}
+                              src={item.imageUrl}
                               alt={item.title}
                               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                               loading="lazy"
                             />
                           )}
                           <div className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-1.5 py-0.5 text-[10px] font-medium text-foreground ring-1 ring-border/60 backdrop-blur">
-                            {item.matchScore}% match
+                            {item.match}% match
                           </div>
                         </div>
 
@@ -339,7 +339,7 @@ function DashboardContent() {
 
                           <div className="mt-1 flex items-center justify-between gap-2">
                             <p className="line-clamp-1 text-xs text-muted-foreground">
-                              {(item as BookRecommendation).author}
+                              {(item as BookRecommendation).authors}
                             </p>
                           </div>
 

@@ -127,7 +127,7 @@ export default function RecommendationCarousel({
                       <div className="flex items-center justify-between mt-1">
                         <p className="text-sm text-muted-foreground line-clamp-1">
                           {isBook
-                            ? (item as BookRecommendation).author
+                            ? (item as BookRecommendation).authors
                             : (item as MovieRecommendation).director}
                         </p>
                         {!isBook && (item as MovieRecommendation).year && (

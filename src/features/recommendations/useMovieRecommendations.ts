@@ -1,7 +1,7 @@
 'use client'
 import { useMutation } from '@tanstack/react-query'
-import { generateMovieRecommendations } from '@/lib/api/recommendations'
 import { toast } from 'sonner'
+import { generateMovieRecommendations } from '@/lib/api/spotify'
 
 export function useMovieRecommendations() {
   return useMutation({
