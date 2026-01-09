@@ -87,17 +87,17 @@ export default function RecommendationCarousel({
                   {/* Match Score Badge */}
                   <div className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-md shadow-sm border border-white/10">
                     <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
-                    {item.matchScore}%
+                    {item.matchScore || item.match}%
                   </div>
 
                   {/* ZONA IMAGINE */}
                   <div className="relative aspect-[2/3] w-full bg-muted">
-                    {item.cover ? (
+                    {item.cover || item.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={item.cover}
+                        src={item.cover || item.imageUrl}
                         alt={item.title}
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                         loading="lazy"
                       />
                     ) : (
@@ -127,7 +127,7 @@ export default function RecommendationCarousel({
                       <div className="flex items-center justify-between mt-1">
                         <p className="text-sm text-muted-foreground line-clamp-1">
                           {isBook
-                            ? (item as BookRecommendation).author
+                            ? (item as BookRecommendation).authors
                             : (item as MovieRecommendation).director}
                         </p>
                         {!isBook && (item as MovieRecommendation).year && (

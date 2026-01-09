@@ -2,19 +2,9 @@ export type ReadingItem = {
   id: string
   title: string
   authors: string
-  emotionsJson: string
-  emotions: {
-    Fear: number
-    Anger: number
-    Anticipation: number
-    Trust: number
-    Surprise: number
-    Sadness: number
-    Joy: number
-    Disgust: number
-    Positive: number
-    Negative: number
-  }
+  cover?: string
+  matchScore?: number
+  url?: string
   read?: boolean
 }
 

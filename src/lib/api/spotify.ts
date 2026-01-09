@@ -1,6 +1,6 @@
 import { useUIStore } from '@/store/ui.store'
 import { ApiError } from 'next/dist/server/api-utils'
-import { BookRecommendation } from '@/lib/api/recommendations'
+import { BookRecommendation, MovieRecommendation } from '@/lib/api/recommendations'
 
 export type Playlist = {
   id: string
@@ -169,10 +169,8 @@ export async function fetchSongs(
   return allFeatures
 }
 
-// Aici ar trebui sa ramana doar return de fetchPlaylists(token) si restu ar trebui adaugat intr o functie ce e apelata cand e generate books de playlist selectat in ui
-// Restu functiei face astfel => ia song features din playlist => trimite la ai andrei => asteapta raspuns => trimite raspuns baza de date => asteapta carti
 export async function fetchUserPlaylists(): Promise<Playlist[]> {
-  const token = useUIStore.getState().accessToken
+  const token = useUIStore.getState().spotifyAccessToken
 
   if (!token) {
     console.warn('No access token found in UI store')
@@ -190,7 +188,8 @@ export async function fetchUserPlaylists(): Promise<Playlist[]> {
 export async function generateBookRecommendations(
   playlistIds: string[],
 ): Promise<BookRecommendation[]> {
-  const token = useUIStore.getState().accessToken
+  const token = useUIStore.getState().spotifyAccessToken
+  const backendToken = useUIStore.getState().backendToken
   if (!token) throw new Error('No access token')
 
   const allBooks: BookRecommendation[] = []
@@ -198,59 +197,82 @@ export async function generateBookRecommendations(
   const playlists = await fetchPlaylists(token)
   const selectedPlaylists = playlists.filter((p) => playlistIds.includes(p.id))
 
-  for (const playlist of selectedPlaylists) {
-    try {
-      const songsFeatures = await fetchSongs(token, playlist.id, playlist.tracksTotal)
-      console.log(`Songs features for "${playlist.name}":`, songsFeatures)
+  const aggregatedSongFeatures = (
+    await Promise.all(
+      selectedPlaylists.map((playlist) => fetchSongs(token, playlist.id, playlist.tracksTotal)),
+    )
+  ).flat()
 
-      const aiApiBase = process.env.NEXT_PUBLIC_AI_API_URL
-      if (!aiApiBase) throw new Error('AI_API_URL not configured')
+  const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL
+  if (!backendBase) throw new Error('BACKEND_URL not configured')
 
-      // 2. Trimitem la Andrei
-      const aiResponse = await fetch(`${aiApiBase}/predict`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          playlistId: playlist.id,
-          playlistName: playlist.name,
-          tracksTotal: playlist.tracksTotal,
-          features: songsFeatures,
-        }),
-      })
+  try {
+    const backendResponse = await fetch(`${backendBase}/api/generate-books`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + backendToken },
+      body: JSON.stringify({
+        playlistId: 'aggregated',
+        playlistName: 'aggregated',
+        tracksTotal: aggregatedSongFeatures.length,
+        songFeatures: aggregatedSongFeatures,
+      }),
+    })
 
-      if (!aiResponse.ok) {
-        throw new Error(`AI API error: ${aiResponse.status}`)
-      }
-
-      const aiData = await aiResponse.json()
-      console.log('AI response:', aiData)
-
-      // 3. De la Andrei la Backend
-      const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL
-      if (!backendBase) throw new Error('BACKEND_URL not configured')
-
-      const backendResponse = await fetch(backendBase, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          playlistId: playlist.id,
-          playlistName: playlist.name,
-          tracksTotal: playlist.tracksTotal,
-          aiResult: aiData,
-        }),
-      })
-
-      if (!backendResponse.ok) {
-        throw new Error(`Backend error: ${backendResponse.status}`)
-      }
-
-      const books = await backendResponse.json()
-      // 4. Acest backend data ar fi lista de carti sugerate, candva chiar va fi
-      allBooks.push(...(Array.isArray(books) ? books : [books]))
-    } catch (err) {
-      console.error(`Error processing playlist "${playlist.name}":`, err)
+    if (!backendResponse.ok) {
+      throw new Error(`Backend error: ${backendResponse.status}`)
     }
+
+    const books = await backendResponse.json()
+    allBooks.push(...(Array.isArray(books) ? books : [books]))
+  } catch (err) {
+    console.error('Error generating books:', err)
   }
 
   return allBooks
+}
+
+export async function generateMovieRecommendations(
+  playlistIds: string[],
+): Promise<MovieRecommendation[]> {
+  const token = useUIStore.getState().spotifyAccessToken
+  const backendToken = useUIStore.getState().backendToken
+  if (!token) throw new Error('No access token')
+
+  const allMovies: MovieRecommendation[] = []
+
+  const playlists = await fetchPlaylists(token)
+  const selectedPlaylists = playlists.filter((p) => playlistIds.includes(p.id))
+
+  const aggregatedSongFeatures = (
+    await Promise.all(
+      selectedPlaylists.map((playlist) => fetchSongs(token, playlist.id, playlist.tracksTotal)),
+    )
+  ).flat()
+
+  const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL
+  if (!backendBase) throw new Error('BACKEND_URL not configured')
+
+  try {
+    const backendResponse = await fetch(`${backendBase}/api/generate-movies`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + backendToken },
+      body: JSON.stringify({
+        playlistId: 'aggregated',
+        playlistName: 'aggregated',
+        tracksTotal: aggregatedSongFeatures.length,
+        songFeatures: aggregatedSongFeatures,
+      }),
+    })
+
+    if (!backendResponse.ok) {
+      throw new Error(`Backend error: ${backendResponse.status}`)
+    }
+
+    const movies = await backendResponse.json()
+    allMovies.push(...(Array.isArray(movies) ? movies : [movies]))
+  } catch (err) {
+    console.error('Error generating books:', err)
+  }
+
+  return allMovies
 }

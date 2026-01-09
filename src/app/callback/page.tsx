@@ -1,33 +1,41 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getToken } from '@/lib/api/spotify-login'
+import { loginToBackend } from '@/lib/api/backend-auth' // Asigură-te că ai fișierul creat anterior
 import { useUIStore } from '@/store/ui.store'
 import { toast } from 'sonner'
 
 export default function CallbackPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { setTokens } = useUIStore()
+
+  // FIX TS2339: Folosim noile denumiri din store
+  const { setSpotifyTokens, setBackendToken } = useUIStore()
+
+  // FIX LOADING STUCK: Folosim un ref pentru a preveni rularea de 2 ori in dev mode
+  const hasRun = useRef(false)
 
   useEffect(() => {
     const handleCallback = async () => {
+      // Dacă a rulat deja o dată, ne oprim. Asta previne erorile de "Invalid code".
+      if (hasRun.current) return
+
       const code = searchParams.get('code')
       const error = searchParams.get('error')
 
       if (error) {
-        toast.error('Authorization failed', {
-          description: error,
-        })
+        toast.error('Authorization failed', { description: error })
         router.push('/')
         return
       }
 
       if (!code) {
-        toast.error('No authorization code received')
         router.push('/')
         return
       }
+
+      hasRun.current = true
 
       const codeVerifier = sessionStorage.getItem('code_verifier')
       if (!codeVerifier) {
@@ -37,43 +45,62 @@ export default function CallbackPage() {
       }
 
       try {
-        const data = await getToken(code, codeVerifier)
+        const spotifyData = await getToken(code, codeVerifier)
 
-        if (data.error) {
-          throw new Error(data.error_description || data.error)
+        if (spotifyData.error) {
+          throw new Error(spotifyData.error_description || spotifyData.error)
         }
 
-        setTokens(data.access_token, data.refresh_token)
-
+        setSpotifyTokens(spotifyData.access_token, spotifyData.refresh_token)
         sessionStorage.removeItem('code_verifier')
 
-        toast.success('Connected successfully!')
+        const backendData = await loginToBackend(
+          spotifyData.access_token,
+          spotifyData.refresh_token,
+        )
+        console.log('Raspuns backend: ', backendData.token)
 
-        const returnTo = sessionStorage.getItem('return_to')
-
-        if (returnTo) {
-          sessionStorage.removeItem('return_to')
-          router.push(returnTo)
-        } else {
+        if (backendData && backendData.token) {
+          setBackendToken(backendData.token)
+          toast.success('Login successful!')
           router.push('/dashboard')
+          console.log(backendData.token)
+        } else {
+          throw new Error('Backend did not return a token')
         }
       } catch (error) {
-        console.error('Token exchange failed:', error)
-        toast.error('Failed to authenticate', {
-          description: error instanceof Error ? error.message : 'Unknown error',
+        console.error('Authentication flow failed:', error)
+
+        let message = 'Unknown error'
+        if (error instanceof Error) {
+          if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            message = 'Could not connect to server. Is the Java Backend running?'
+          } else {
+            message = error.message
+          }
+        }
+
+        toast.error('Login Failed', {
+          description: message,
+          duration: 5000,
         })
+
         router.push('/')
       }
     }
 
     handleCallback()
-  }, [searchParams, router, setTokens])
+  }, [searchParams, router, setSpotifyTokens, setBackendToken])
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="text-center">
-        <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        <p className="text-muted-foreground">Connecting to Spotify...</p>
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="text-center space-y-4">
+        {/* Un spinner simplu și un text */}
+        <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div>
+          <h2 className="text-lg font-semibold">Finalizing Login...</h2>
+          <p className="text-muted-foreground">Connecting your Spotify account to our servers.</p>
+        </div>
       </div>
     </div>
   )

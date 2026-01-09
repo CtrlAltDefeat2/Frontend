@@ -7,7 +7,7 @@ import { initiateSpotifyLogin } from '@/lib/api/spotify-login'
 import { Loader2 } from 'lucide-react'
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { accessToken } = useUIStore()
+  const { spotifyAccessToken } = useUIStore()
   const pathname = usePathname()
   const [isMounted, setIsMounted] = useState(false)
 
@@ -17,16 +17,16 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (isMounted && !accessToken) {
+    if (isMounted && !spotifyAccessToken) {
       if (pathname && pathname !== '/') {
         sessionStorage.setItem('return_to', pathname)
       }
 
       initiateSpotifyLogin()
     }
-  }, [isMounted, accessToken, pathname])
+  }, [isMounted, spotifyAccessToken, pathname])
 
-  if (!isMounted || !accessToken) {
+  if (!isMounted || !spotifyAccessToken) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-2">
