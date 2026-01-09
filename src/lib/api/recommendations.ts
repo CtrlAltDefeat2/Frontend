@@ -6,6 +6,8 @@ export type BookRecommendation = {
   imageUrl?: string
   match?: number // 0-100
   reason?: string
+  cover?: string
+  matchScore?: number
   url?: string
 }
 
@@ -16,6 +18,8 @@ export type MovieRecommendation = {
   year: string
   cover?: string
   match?: number
+  imageUrl?: string
   reason?: string
   url?: string
+  matchScore?: number
 }

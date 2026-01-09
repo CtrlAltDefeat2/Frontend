@@ -301,97 +301,15 @@ function DashboardContent() {
               />
             ) : (
               // MODE: BOOKS
-              <ul className="grid gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                <AnimatePresence mode="popLayout">
-                  {results.map((item: RecommendationItem, idx: number) => {
-                    const isSaved = readingList.some((it) => it.id === item.id)
-
-                    return (
-                      <motion.li
-                        key={item.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ delay: idx * 0.03 }}
-                        className="group overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm transition-all hover:shadow-md hover:border-border"
-                      >
-                        {/* Cover Image */}
-                        <div className="relative aspect-[3/4] w-full bg-muted">
-                          {item.imageUrl && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={item.imageUrl}
-                              alt={item.title}
-                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                              loading="lazy"
-                            />
-                          )}
-                          <div className="absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-1.5 py-0.5 text-[10px] font-medium text-foreground ring-1 ring-border/60 backdrop-blur">
-                            {item.match}% match
-                          </div>
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex flex-col p-3">
-                          <h3 className="line-clamp-2 text-sm font-semibold leading-snug">
-                            {item.title}
-                          </h3>
-
-                          <div className="mt-1 flex items-center justify-between gap-2">
-                            <p className="line-clamp-1 text-xs text-muted-foreground">
-                              {(item as BookRecommendation).authors}
-                            </p>
-                          </div>
-
-                          {item.url && (
-                            <a
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary hover:underline"
-                            >
-                              View details <ExternalLink className="h-3 w-3" />
-                            </a>
-                          )}
-
-                          <p className="mt-2 line-clamp-2 text-[11px] text-muted-foreground/80 italic">
-                            &quot;{item.reason}&quot;
-                          </p>
-
-                          <CardFooter className="mt-3 p-0 pt-2">
-                            <Button
-                              size="sm"
-                              className={cn(
-                                'w-full transition-all',
-                                isSaved
-                                  ? 'bg-muted text-muted-foreground hover:bg-muted'
-                                  : 'bg-primary text-primary-foreground',
-                              )}
-                              disabled={isSaved}
-                              onClick={() => {
-                                addBook(item as unknown as ReadingItem)
-                                toast.success('Saved to reading list')
-                              }}
-                            >
-                              {isSaved ? (
-                                <span className="inline-flex items-center gap-1.5">
-                                  <CheckCircle2 className="h-3.5 w-3.5" />
-                                  Saved
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1.5">
-                                  <BookMarked className="h-3.5 w-3.5" />
-                                  Save
-                                </span>
-                              )}
-                            </Button>
-                          </CardFooter>
-                        </div>
-                      </motion.li>
-                    )
-                  })}
-                </AnimatePresence>
-              </ul>
+              <RecommendationCarousel
+                items={results}
+                mode="books"
+                isSaved={(id) => readingList.some((item) => item.id === id)}
+                onSave={(item) => {
+                  addBook(item as ReadingItem)
+                  toast.success('Saved to watch list')
+                }}
+              />
             )}
           </>
         )}
