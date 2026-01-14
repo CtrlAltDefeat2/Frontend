@@ -19,7 +19,13 @@ export async function loginToBackend(spotifyAccessToken: string, spotifyRefreshT
     }
     console.log(res)
 
-    return await res.json()
+    const data = await res.json()
+
+    if (data.token) {
+      localStorage.setItem('auth_token', data.token)
+    }
+
+    return data
   } catch (error) {
     console.error('Error logging into backend:', error)
     throw error
