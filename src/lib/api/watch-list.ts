@@ -56,11 +56,7 @@ export async function addToWatchList(item: WatchItem): Promise<void> {
   })
 }
 
-export async function toggleWatchedStatus(id: string): Promise<void> {
-  await apiRequest(`/movies/toggle-watched?movieId=${id}`, {
-    method: 'PATCH',
-  })
-}
+export async function toggleWatchedStatus(id: string): Promise<void> {}
 
 export async function removeFromWatchList(id: string): Promise<void> {
   await apiRequest(`/movies/${id}`, {

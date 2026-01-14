@@ -31,14 +31,9 @@ function writeStore(items: ReadingItem[]) {
 
 export async function fetchReadingList(): Promise<ReadingItem[]> {
   const data = await apiRequest('/books/me')
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return data.map((b: any) => ({
-    id: b.id.toString(),
-    title: b.title,
-    authors: b.authors,
-    cover: b.imageUrl,
-    read: b.read,
-  }))
+  return data.map((book: any) => mapBookToReadingItem(book, readStore()))
 }
 
 export async function addToReadingList(item: ReadingItem): Promise<void> {
@@ -52,11 +47,7 @@ export async function addToReadingList(item: ReadingItem): Promise<void> {
   })
 }
 
-export async function toggleReadStatus(id: string): Promise<void> {
-  await apiRequest(`/books/toggle-read?bookId=${id}`, {
-    method: 'PATCH',
-  })
-}
+export async function toggleReadStatus(id: string): Promise<void> {}
 
 export async function removeFromReadingList(id: string): Promise<void> {
   await apiRequest(`/books/${id}`, {
@@ -68,4 +59,18 @@ export async function clearReadingList(): Promise<void> {
   await apiRequest('/books/all', {
     method: 'DELETE',
   })
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const mapBookToReadingItem = (book: any, localItems: ReadingItem[] = []): ReadingItem => {
+  const localMatch = localItems.find((li) => li.id === book.id.toString())
+  return {
+    id: book.id.toString(),
+    title: book.title,
+    authors: book.authors || 'Autor necunoscut',
+    cover: book.imageUrl,
+    matchScore: book.match,
+    url: '', //  pentru implementare view details
+    read: localMatch ? localMatch.read : false,
+  }
 }
