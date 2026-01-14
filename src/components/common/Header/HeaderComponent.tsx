@@ -10,9 +10,9 @@ import { Button } from '@/components/ui/Button/Button'
 
 export default function HeaderComponent() {
   const { theme, toggleTheme } = useUIStore()
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState<boolean>(false)
 
-  useEffect(() => {
+  useEffect((): void => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
   }, [])
