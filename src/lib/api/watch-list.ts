@@ -49,6 +49,45 @@ export async function toggleWatchedStatus(id: string): Promise<void> {
     item.watched = !item.watched
     writeStore(items)
   }
+
+  const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8081'
+  const rawStorage = localStorage.getItem('app-storage')
+
+  let token = null
+  try {
+    if (rawStorage) {
+      const storageJson = JSON.parse(rawStorage)
+      token = storageJson.state?.backendToken
+    }
+  } catch (e) {
+    console.error('Eroare la parsarea local storage-ului:', e)
+  }
+
+  if (!token || token === 'undefined') {
+    console.warn(
+      'Utilizatorul nu este autentificat la backend. Statusul nu a fost trimis la server.',
+    )
+    return
+  }
+
+  try {
+    const response = await fetch(`${backendBase}/api/movies/toggle-watched?movieId=${id}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.text()
+      console.error('Eroare backend la toggle-watch:', errorData)
+    } else {
+      console.log(`Statusul filmului ${id} a fost actualizat pe server.`)
+    }
+  } catch (error) {
+    console.error('Eroare de rețea la comunicarea cu backend-ul:', error)
+  }
 }
 
 export async function removeFromWatchList(id: string): Promise<void> {
