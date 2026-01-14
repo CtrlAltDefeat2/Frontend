@@ -1,3 +1,5 @@
+import { apiRequest } from './api-client'
+
 export type ReadingItem = {
   id: string
   title: string
@@ -28,16 +30,21 @@ function writeStore(items: ReadingItem[]) {
 }
 
 export async function fetchReadingList(): Promise<ReadingItem[]> {
-  await new Promise((r) => setTimeout(r, 200))
-  return readStore()
+  const data = await apiRequest('/books/me')
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data.map((book: any) => mapBookToReadingItem(book, readStore()))
 }
 
 export async function addToReadingList(item: ReadingItem): Promise<void> {
-  const items = readStore()
-  if (!items.find((b) => b.id === item.id)) {
-    items.unshift({ ...item, read: false })
-    writeStore(items)
-  }
+  await apiRequest('/books', {
+    method: 'POST',
+    body: JSON.stringify({
+      title: item.title,
+      authors: item.authors,
+      cover: item.cover,
+    }),
+  })
 }
 
 export async function toggleReadStatus(id: string): Promise<void> {
@@ -64,12 +71,29 @@ export async function toggleReadStatus(id: string): Promise<void> {
 }
 
 export async function removeFromReadingList(id: string): Promise<void> {
-  const next = readStore().filter((b) => b.id !== id)
-  writeStore(next)
+  await apiRequest(`/books/${id}`, {
+    method: 'DELETE',
+  })
 }
 
 export async function clearReadingList(): Promise<void> {
-  writeStore([])
+  await apiRequest('/books/all', {
+    method: 'DELETE',
+  })
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const mapBookToReadingItem = (book: any, localItems: ReadingItem[] = []): ReadingItem => {
+  const localMatch = localItems.find((li) => li.id === book.id.toString())
+  return {
+    id: book.id.toString(),
+    title: book.title,
+    authors: book.authors || 'Autor necunoscut',
+    cover: book.imageUrl,
+    matchScore: book.match,
+    url: '', //  pentru implementare view details
+    read: localMatch ? localMatch.read : false,
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
