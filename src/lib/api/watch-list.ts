@@ -1,3 +1,5 @@
+import { apiRequest } from './api-client'
+
 export type WatchItem = {
   id: string
   title: string
@@ -30,32 +32,44 @@ function writeStore(items: WatchItem[]) {
 }
 
 export async function fetchWatchList(): Promise<WatchItem[]> {
-  await new Promise((r) => setTimeout(r, 200)) // simulare delay
-  return readStore()
+  const data = await apiRequest('/movies')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data.map((m: any) => ({
+    id: m.id.toString(),
+    title: m.title,
+    director: m.director,
+    year: m.year,
+    cover: m.cover,
+    watched: m.watched,
+  }))
 }
 
 export async function addToWatchList(item: WatchItem): Promise<void> {
-  const items = readStore()
-  if (!items.find((m) => m.id === item.id)) {
-    items.unshift({ ...item, watched: false })
-    writeStore(items)
-  }
+  await apiRequest('/movies', {
+    method: 'POST',
+    body: JSON.stringify({
+      title: item.title,
+      director: item.director,
+      year: item.year,
+      cover: item.cover,
+    }),
+  })
 }
 
 export async function toggleWatchedStatus(id: string): Promise<void> {
-  const items = readStore()
-  const item = items.find((m) => m.id === id)
-  if (item) {
-    item.watched = !item.watched
-    writeStore(items)
-  }
+  await apiRequest(`/movies/toggle-watched?movieId=${id}`, {
+    method: 'PATCH',
+  })
 }
 
 export async function removeFromWatchList(id: string): Promise<void> {
-  const next = readStore().filter((m) => m.id !== id)
-  writeStore(next)
+  await apiRequest(`/movies/${id}`, {
+    method: 'DELETE',
+  })
 }
 
 export async function clearWatchList(): Promise<void> {
-  writeStore([])
+  await apiRequest('/movies/all', {
+    method: 'DELETE',
+  })
 }

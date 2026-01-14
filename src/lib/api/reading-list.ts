@@ -1,3 +1,5 @@
+import { apiRequest } from './api-client'
+
 export type ReadingItem = {
   id: string
   title: string
@@ -28,32 +30,42 @@ function writeStore(items: ReadingItem[]) {
 }
 
 export async function fetchReadingList(): Promise<ReadingItem[]> {
-  await new Promise((r) => setTimeout(r, 200))
-  return readStore()
+  const data = await apiRequest('/books/me')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data.map((b: any) => ({
+    id: b.id.toString(),
+    title: b.title,
+    authors: b.authors,
+    cover: b.imageUrl,
+    read: b.read,
+  }))
 }
 
 export async function addToReadingList(item: ReadingItem): Promise<void> {
-  const items = readStore()
-  if (!items.find((b) => b.id === item.id)) {
-    items.unshift({ ...item, read: false })
-    writeStore(items)
-  }
+  await apiRequest('/books', {
+    method: 'POST',
+    body: JSON.stringify({
+      title: item.title,
+      authors: item.authors,
+      cover: item.cover,
+    }),
+  })
 }
 
 export async function toggleReadStatus(id: string): Promise<void> {
-  const items = readStore()
-  const item = items.find((b) => b.id === id)
-  if (item) {
-    item.read = !item.read
-    writeStore(items)
-  }
+  await apiRequest(`/books/toggle-read?bookId=${id}`, {
+    method: 'PATCH',
+  })
 }
 
 export async function removeFromReadingList(id: string): Promise<void> {
-  const next = readStore().filter((b) => b.id !== id)
-  writeStore(next)
+  await apiRequest(`/books/${id}`, {
+    method: 'DELETE',
+  })
 }
 
 export async function clearReadingList(): Promise<void> {
-  writeStore([])
+  await apiRequest('/books/all', {
+    method: 'DELETE',
+  })
 }
