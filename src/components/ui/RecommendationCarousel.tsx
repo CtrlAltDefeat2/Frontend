@@ -11,7 +11,7 @@ import {
   ExternalLink,
   Star,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button/Button'
 import { cn } from '@/lib/utils'
 import { type BookRecommendation, type MovieRecommendation } from '@/lib/api/recommendations'
 
