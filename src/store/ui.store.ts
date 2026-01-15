@@ -53,11 +53,11 @@ export const useUIStore = create<UIStore>()(
   ),
 )
 
-export const useHasHydrated = () => {
-  const [hasHydrated, setHasHydrated] = React.useState(false)
+export const useHasHydrated: () => boolean = () => {
+  const [hasHydrated, setHasHydrated] = React.useState<boolean>(false)
 
-  React.useEffect(() => {
-    const unsubscribe = useUIStore.persist.onFinishHydration(() => {
+  React.useEffect((): (() => void) => {
+    const unsubscribe: () => void = useUIStore.persist.onFinishHydration(() => {
       setHasHydrated(true)
     })
 
