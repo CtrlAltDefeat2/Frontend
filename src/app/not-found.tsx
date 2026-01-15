@@ -1,39 +1,51 @@
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Music2, Home, LayoutGrid } from 'lucide-react'
+import { Music2 } from 'lucide-react'
+import { NOT_FOUND_CONSTANTS } from '@/resources/resources'
+import { notFoundStyles } from '../components/styles/not-found.styles'
+import { Button } from '@/components/ui/Button/Button'
+
+export interface NotFoundAction {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  variant?: 'default' | 'outline'
+}
 
 export default function NotFound() {
   return (
-    <main className="relative flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
+    <main className={notFoundStyles.main}>
       {/* Icon */}
-      <div className="mb-8 flex items-center justify-center rounded-full bg-primary/10 p-5">
-        <Music2 className="h-10 w-10 text-primary" strokeWidth={1.8} />
+      <div className={notFoundStyles.icon.wrapper}>
+        <Music2
+          className={notFoundStyles.icon.element}
+          strokeWidth={NOT_FOUND_CONSTANTS.ICON_STROKE_WIDTH}
+        />
       </div>
 
-      <h1 className="text-3xl font-bold tracking-tight">Oops — nothing’s playing here</h1>
-      <p className="mt-3 max-w-md text-base text-muted-foreground">
-        Looks like the page you’re looking for doesn’t exist. <br />
-        Let’s get you back to your playlists.
+      <h1 className={notFoundStyles.title}>{NOT_FOUND_CONSTANTS.TEXTS.TITLE}</h1>
+
+      <p className={notFoundStyles.description}>
+        {NOT_FOUND_CONSTANTS.TEXTS.DESCRIPTION.LINE_1}
+        <br />
+        {NOT_FOUND_CONSTANTS.TEXTS.DESCRIPTION.LINE_2}
       </p>
 
-      <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-        <Link href="/">
-          <Button size="lg" className="px-6">
-            <Home className="mr-2 h-4 w-4" />
-            Back to Home
-          </Button>
-        </Link>
-        <Link href="/dashboard">
-          <Button size="lg" variant="outline" className="px-6">
-            <LayoutGrid className="mr-2 h-4 w-4" />
-            Open Dashboard
-          </Button>
-        </Link>
+      <div className={notFoundStyles.actions.wrapper}>
+        {NOT_FOUND_CONSTANTS.ACTIONS.map((action) => {
+          const Icon = action.icon
+          return (
+            <Link key={action.href} href={action.href}>
+              <Button size="lg" variant={action.variant} className={notFoundStyles.actions.button}>
+                <Icon className={notFoundStyles.actions.buttonIcon} />
+                {action.label}
+              </Button>
+            </Link>
+          )
+        })}
       </div>
 
-      {/* Soft blurred background accent */}
-      <div className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center">
-        <div className="h-[420px] w-[420px] rounded-full bg-primary/5 blur-3xl" />
+      <div className={notFoundStyles.background.wrapper}>
+        <div className={notFoundStyles.background.blur} />
       </div>
     </main>
   )
