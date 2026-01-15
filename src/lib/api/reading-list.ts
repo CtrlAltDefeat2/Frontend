@@ -33,7 +33,7 @@ export async function fetchReadingList(): Promise<ReadingItem[]> {
   const data = await apiRequest('/books/me')
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return data.map((book: any) => mapBookToReadingItem(book, readStore()))
+  return data.map((book: any) => mapBookToReadingItem(book))
 }
 
 export async function addToReadingList(item: ReadingItem): Promise<void> {
@@ -48,23 +48,29 @@ export async function addToReadingList(item: ReadingItem): Promise<void> {
 }
 
 export async function toggleReadStatus(id: string): Promise<void> {
-  const items = readStore()
-  const updatedItems = items.map((item) => (item.id === id ? { ...item, read: !item.read } : item))
-  writeStore(updatedItems)
-
   const rawStorage = localStorage.getItem('app-storage')
   const token = rawStorage ? JSON.parse(rawStorage).state?.backendToken : null
 
-  if (!token) return
+  if (!token) {
+    console.error('No token found, cannot sync with server')
+    return
+  }
+
   try {
-    const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL
-    await fetch(`${backendBase}/api/books/toggle-read?bookId=${id}`, {
+    const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8081'
+
+    const response = await fetch(`${backendBase}/api/books/toggle-read?bookId=${id}`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     })
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`)
+    }
+    console.log('Status updated on server successfully')
   } catch (error) {
     console.error('Sync error:', error)
   }
@@ -83,15 +89,14 @@ export async function clearReadingList(): Promise<void> {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const mapBookToReadingItem = (book: any, localItems: ReadingItem[] = []): ReadingItem => {
-  const localMatch = localItems.find((li) => li.id === book.id.toString())
+export const mapBookToReadingItem = (book: any): ReadingItem => {
   return {
     id: book.id.toString(),
     title: book.title,
     authors: book.authors || 'Autor necunoscut',
-    cover: book.imageUrl,
+    cover: book.imageUrl || book.cover,
     matchScore: book.match,
-    url: '', //  pentru implementare view details
-    read: localMatch ? localMatch.read : false,
+    url: '',
+    read: book.read,
   }
 }
