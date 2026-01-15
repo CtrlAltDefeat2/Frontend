@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { RefObject, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { useUIStore } from '@/store/ui.store'
@@ -12,17 +12,30 @@ import { AuthGuardProps } from './AuthGuardComponent.types'
 export default function AuthGuardComponent({ children }: AuthGuardProps) {
   const { spotifyAccessToken } = useUIStore()
   const pathname: string = usePathname()
+  const hasCheckedAuth: RefObject<boolean> = useRef(false)
 
-  useEffect((): void => {
-    if (spotifyAccessToken) {
+  useEffect((): (() => void) | undefined => {
+    if (hasCheckedAuth.current || spotifyAccessToken) {
       return
     }
 
-    if (pathname !== AUTH_GUARD_CONSTANTS.HOME_PATH) {
-      sessionStorage.setItem(AUTH_GUARD_CONSTANTS.STORAGE_KEY, pathname)
-    }
+    hasCheckedAuth.current = true
 
-    initiateSpotifyLogin()
+    const timer = setTimeout((): void => {
+      const currentToken = useUIStore.getState().spotifyAccessToken
+
+      if (currentToken) {
+        return
+      }
+
+      if (pathname !== AUTH_GUARD_CONSTANTS.HOME_PATH) {
+        sessionStorage.setItem(AUTH_GUARD_CONSTANTS.STORAGE_KEY, pathname)
+      }
+
+      initiateSpotifyLogin()
+    }, 50)
+
+    return () => clearTimeout(timer)
   }, [spotifyAccessToken, pathname])
 
   if (!spotifyAccessToken) {

@@ -1,5 +1,6 @@
+import React from 'react'
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 interface UIStore {
   theme: 'light' | 'dark'
@@ -42,6 +43,7 @@ export const useUIStore = create<UIStore>()(
     }),
     {
       name: 'app-storage',
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         spotifyAccessToken: state.spotifyAccessToken,
         spotifyRefreshToken: state.spotifyRefreshToken,
@@ -50,3 +52,21 @@ export const useUIStore = create<UIStore>()(
     },
   ),
 )
+
+export const useHasHydrated: () => boolean = () => {
+  const [hasHydrated, setHasHydrated] = React.useState<boolean>(false)
+
+  React.useEffect((): (() => void) => {
+    const unsubscribe: () => void = useUIStore.persist.onFinishHydration(() => {
+      setHasHydrated(true)
+    })
+
+    if (useUIStore.persist.hasHydrated()) {
+      setHasHydrated(true)
+    }
+
+    return unsubscribe
+  }, [])
+
+  return hasHydrated
+}
