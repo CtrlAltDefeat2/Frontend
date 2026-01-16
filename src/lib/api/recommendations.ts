@@ -5,10 +5,8 @@ export type BookRecommendation = {
   authors: string
   imageUrl?: string
   match?: number // 0-100
-  reason?: string
   cover?: string
   matchScore?: number
-  url?: string
 }
 
 export type MovieRecommendation = {
@@ -19,7 +17,5 @@ export type MovieRecommendation = {
   cover?: string
   match?: number
   imageUrl?: string
-  reason?: string
-  url?: string
   matchScore?: number
 }
