@@ -114,7 +114,6 @@ export const READING_LIST_CONSTANTS = {
       READ_LABEL: 'Read',
       MARK_READ_LABEL: 'Mark read',
       NO_COVER: 'No cover',
-      VIEW_DETAILS: 'View details',
     },
   },
 
@@ -173,7 +172,6 @@ export const WATCH_LIST_CONSTANTS = {
       WATCHED_LABEL: 'Watched',
       MARK_WATCHED_LABEL: 'Mark watched',
       NO_POSTER: 'No poster',
-      VIEW_DETAILS: 'View details',
     },
   },
 
@@ -496,7 +494,6 @@ export const RECOMMENDATION_CAROUSEL_CONSTANTS = {
   },
   LABELS: {
     NO_COVER: 'No cover',
-    VIEW_DETAILS: 'View details',
     SAVED: 'Saved',
     ADD: 'Add',
   },

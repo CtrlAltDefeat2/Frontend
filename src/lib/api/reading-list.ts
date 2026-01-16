@@ -96,7 +96,6 @@ export const mapBookToReadingItem = (book: any): ReadingItem => {
     authors: book.authors || 'Autor necunoscut',
     cover: book.imageUrl || book.cover,
     matchScore: book.match,
-    url: '',
     read: book.read,
   }
 }

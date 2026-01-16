@@ -257,21 +257,6 @@ export default function ReadingList() {
                         {book.title}
                       </h3>
                       <p className={readingListStyles.booksList.content.author}>{book.authors}</p>
-
-                      <div className={readingListStyles.booksList.content.actions}>
-                        <a href={book.url} target="_blank" rel="noopener noreferrer">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className={readingListStyles.booksList.content.button}
-                          >
-                            {READING_LIST_CONSTANTS.TEXTS.BOOK_CARD.VIEW_DETAILS}
-                            <ExternalLink
-                              className={readingListStyles.booksList.content.buttonIcon}
-                            />
-                          </Button>
-                        </a>
-                      </div>
                     </div>
                   </motion.li>
                 ))}
