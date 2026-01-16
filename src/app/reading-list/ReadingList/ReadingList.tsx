@@ -54,6 +54,13 @@ export default function ReadingList() {
     setSortOrder((prev: SortOrder): 'asc' | 'desc' => (prev === 'asc' ? 'desc' : 'asc'))
   }
 
+  const searchBookDetails = (title: string, authors: string): void => {
+    const query: string = `${title} by ${authors}`
+    const url: string = `https://www.google.com/search?q=${query}`
+
+    window.open(url, '_blank')
+  }
+
   if (isLoading) {
     return (
       <main className={readingListStyles.loading.container}>
@@ -257,6 +264,19 @@ export default function ReadingList() {
                         {book.title}
                       </h3>
                       <p className={readingListStyles.booksList.content.author}>{book.authors}</p>
+                      <div className={readingListStyles.booksList.content.actions}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className={readingListStyles.booksList.content.button}
+                          onClick={() => searchBookDetails(book.title, book.authors)}
+                        >
+                          {READING_LIST_CONSTANTS.TEXTS.BOOK_CARD.VIEW_DETAILS}
+                          <ExternalLink
+                            className={readingListStyles.booksList.content.buttonIcon}
+                          />
+                        </Button>
+                      </div>
                     </div>
                   </motion.li>
                 ))}

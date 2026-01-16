@@ -60,6 +60,13 @@ export default function WatchList() {
     setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
   }
 
+  const searchMovieDetails = (title: string, authors: string): void => {
+    const query: string = `${title} by ${authors}`
+    const url: string = `https://www.google.com/search?q=${query}`
+
+    window.open(url, '_blank')
+  }
+
   if (isLoading) {
     return (
       <main className={watchListStyles.loading.container}>
@@ -276,20 +283,17 @@ export default function WatchList() {
                         </div>
 
                         <div className={watchListStyles.moviesList.content.actions}>
-                          {movie.url && (
-                            <a href={movie.url} target="_blank" rel="noopener noreferrer">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className={watchListStyles.moviesList.content.button}
-                              >
-                                {WATCH_LIST_CONSTANTS.TEXTS.MOVIE_CARD.VIEW_DETAILS}
-                                <ExternalLink
-                                  className={watchListStyles.moviesList.content.buttonIcon}
-                                />
-                              </Button>
-                            </a>
-                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className={watchListStyles.moviesList.content.button}
+                            onClick={() => searchMovieDetails(movie.title, movie.director)}
+                          >
+                            {WATCH_LIST_CONSTANTS.TEXTS.MOVIE_CARD.VIEW_DETAILS}
+                            <ExternalLink
+                              className={watchListStyles.moviesList.content.buttonIcon}
+                            />
+                          </Button>
                         </div>
                       </div>
                     </motion.li>
