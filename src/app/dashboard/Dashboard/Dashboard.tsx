@@ -263,7 +263,14 @@ export function DashboardContent() {
               <RecommendationCarousel
                 items={results}
                 mode="movies"
-                isSaved={(id) => watchList.some((item) => item.id === id)}
+                isSaved={(id) => {
+                  const recommendation = (results as MovieRecommendation[]).find((r) => r.id === id)
+                  return watchList.some(
+                    (item) =>
+                      item.title === recommendation?.title &&
+                      item.director === recommendation?.director,
+                  )
+                }}
                 onSave={(item) => {
                   addMovie(item as MovieRecommendation)
                   toast.success(DASHBOARD_CONSTANTS.TOAST_MESSAGES.SAVED_MOVIE)
@@ -273,7 +280,14 @@ export function DashboardContent() {
               <RecommendationCarousel
                 items={results}
                 mode="books"
-                isSaved={(id) => readingList.some((item) => item.id === id)}
+                isSaved={(id) => {
+                  const recommendation = (results as BookRecommendation[]).find((r) => r.id === id)
+                  return readingList.some(
+                    (item) =>
+                      item.title === recommendation?.title &&
+                      item.authors === recommendation?.authors,
+                  )
+                }}
                 onSave={(item) => {
                   addBook(item as ReadingItem)
                   toast.success(DASHBOARD_CONSTANTS.TOAST_MESSAGES.SAVED_BOOK)
